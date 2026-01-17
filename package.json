@@ -1,0 +1,83 @@
+{
+    "name": "devxcode",
+    "displayName": "DevXCode",
+    "description": "A React-based VS Code extension",
+    "version": "0.0.1",
+    "engines": {
+        "vscode": "^1.74.0"
+    },
+    "categories": [
+        "Other"
+    ],
+    "activationEvents": [
+        "onCommand:devxcode.openWebview"
+    ],
+    "main": "./out/consumers/extension.js",
+    "contributes": {
+        "commands": [
+            {
+                "command": "devxcode.openWebview",
+                "title": "Open DevXCode Webview",
+                "icon": "$(code)"
+            }
+        ],
+        "views": {
+            "devxcode": [
+                {
+                    "id": "devxcodeView",
+                    "name": "DevXCode",
+                    "type": "webview",
+                    "when": "true"
+                }
+            ]
+        },
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "devxcode",
+                    "title": "DevXCode",
+                    "icon": "$(code)"
+                }
+            ]
+        }
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./",
+        "pretest": "npm run compile && npm run lint",
+        "lint": "eslint src --ext ts,tsx",
+        "format": "prettier --write \"src/**/*.{ts,tsx,json,css,md}\"",
+        "webview:dev": "vite build --watch --mode development",
+        "webview:build": "vite build --mode production",
+        "build": "npm run compile && npm run webview:build",
+        "package": "vsce package"
+    },
+    "devDependencies": {
+        "@types/node": "^20.10.0",
+        "@types/react": "^18.2.45",
+        "@types/react-dom": "^18.2.18",
+        "@types/vscode": "^1.74.0",
+        "@typescript-eslint/eslint-plugin": "^6.15.0",
+        "@typescript-eslint/parser": "^6.15.0",
+        "@vitejs/plugin-react": "^4.2.1",
+        "@vscode/vsce": "^2.22.0",
+        "autoprefixer": "^10.4.16",
+        "clsx": "^2.1.1",
+        "eslint": "^8.56.0",
+        "eslint-plugin-react": "^7.33.2",
+        "eslint-plugin-react-hooks": "^4.6.0",
+        "postcss": "^8.4.32",
+        "prettier": "^3.1.1",
+        "tailwind-merge": "^3.4.0",
+        "tailwindcss": "^3.4.0",
+        "typescript": "^5.3.3",
+        "vite": "^5.0.8"
+    },
+    "dependencies": {
+        "date-fns": "^3.0.0",
+        "lucide-react": "^0.562.0",
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0"
+    }
+}
