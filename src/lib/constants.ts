@@ -9,4 +9,5 @@ export const DATE_FORMAT_DD_MM = 'dd/MM';
  */
 export const STORAGE_KEYS = {
   RELEASES: 'devxcode.releases',
+  TODOS: 'devxcode.todos',
 } as const;

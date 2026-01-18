@@ -1,5 +1,6 @@
-import React from 'react';
-import { Releases, Section } from './components';
+import { Section } from '@components/atoms';
+import { Releases, Todos } from '@components/templates';
+import { default as React } from 'react';
 
 const App: React.FC = () => {
   // VS Code webviews automatically provide CSS variables like --vscode-editor-background
@@ -9,7 +10,7 @@ const App: React.FC = () => {
     <div
       className="w-full h-full m-0 p-0"
     >
-      <Section title="Todo" defaultExpanded />
+      <Todos />
       <Section title="Repositories" defaultExpanded />
       <Releases />
       <Section title="Utilities" />
