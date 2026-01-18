@@ -1,4 +1,6 @@
+import * as path from 'path';
 import * as vscode from 'vscode';
+import { RepositoriesService } from '../services/repositories';
 import { StorageService } from '../services/storage';
 import { getVSCodeTheme } from '../services/theme';
 
@@ -12,11 +14,42 @@ export function activate(context: vscode.ExtensionContext) {
     context.globalState
   );
 
+  // Initialize repositories service
+  const repositoriesService = new RepositoriesService(storage);
+
+  // Check current workspace and add/update repository on activation
+  const checkCurrentWorkspace = async () => {
+    const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+    if (workspaceFolder) {
+      const workspacePath = workspaceFolder.uri.fsPath;
+      const workspaceName = path.basename(workspacePath);
+      try {
+        await repositoriesService.addOrUpdateRepository(
+          workspaceName,
+          workspacePath
+        );
+      } catch (error) {
+        console.error('[Repositories] Failed to add/update repository:', error);
+      }
+    } else {
+      console.log('[Repositories] No workspace folder found');
+    }
+  };
+
+  // Check workspace on activation
+  checkCurrentWorkspace().catch(error => {
+    console.error('[Repositories] Error in checkCurrentWorkspace:', error);
+  });
+
   // Register command to open webview
   const disposable = vscode.commands.registerCommand(
     'devxcode.openWebview',
     () => {
-      WebviewPanel.createOrShow(context.extensionUri, storage);
+      WebviewPanel.createOrShow(
+        context.extensionUri,
+        storage,
+        repositoriesService
+      );
     }
   );
 
@@ -24,7 +57,8 @@ export function activate(context: vscode.ExtensionContext) {
   const webviewViewProvider = new WebviewViewProvider(
     context.extensionUri,
     storage,
-    context
+    context,
+    repositoriesService
   );
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider(
@@ -51,11 +85,13 @@ class WebviewPanel {
   private readonly _panel: vscode.WebviewPanel;
   private readonly _extensionUri: vscode.Uri;
   private readonly _storage: StorageService;
+  private readonly _repositoriesService: RepositoriesService;
   private _disposables: vscode.Disposable[] = [];
 
   public static createOrShow(
     extensionUri: vscode.Uri,
-    storage: StorageService
+    storage: StorageService,
+    repositoriesService: RepositoriesService
   ) {
     const column = vscode.window.activeTextEditor
       ? vscode.window.activeTextEditor.viewColumn
@@ -81,28 +117,37 @@ class WebviewPanel {
       }
     );
 
-    WebviewPanel.currentPanel = new WebviewPanel(panel, extensionUri, storage);
+    WebviewPanel.currentPanel = new WebviewPanel(
+      panel,
+      extensionUri,
+      storage,
+      repositoriesService
+    );
   }
 
   private constructor(
     panel: vscode.WebviewPanel,
     extensionUri: vscode.Uri,
-    storage: StorageService
+    storage: StorageService,
+    repositoriesService: RepositoriesService
   ) {
     this._panel = panel;
     this._extensionUri = extensionUri;
     this._storage = storage;
+    this._repositoriesService = repositoriesService;
 
     // Set the webview's initial html content
     this._update();
 
     // Listen for theme changes
-    const themeChangeDisposable = vscode.window.onDidChangeActiveColorTheme(() => {
-      this._panel.webview.postMessage({
-        command: 'themeChanged',
-        theme: getVSCodeTheme(),
-      });
-    });
+    const themeChangeDisposable = vscode.window.onDidChangeActiveColorTheme(
+      () => {
+        this._panel.webview.postMessage({
+          command: 'themeChanged',
+          theme: getVSCodeTheme(),
+        });
+      }
+    );
     this._disposables.push(themeChangeDisposable);
 
     // Listen for when the panel is disposed
@@ -111,48 +156,18 @@ class WebviewPanel {
 
     // Handle messages from the webview
     this._panel.webview.onDidReceiveMessage(
-      (message: { command: string; key?: string; value?: unknown; message?: string; type?: string }) => {
-        switch (message.command) {
-          case 'getStorage':
-            if (message.key) {
-              this._storage.getValue(message.key).then((value) => {
-                this._panel.webview.postMessage({
-                  command: 'storageValue',
-                  key: message.key,
-                  value: value,
-                });
-              });
-            }
-            return;
-          case 'setStorage':
-            if (message.key !== undefined) {
-              this._storage
-                .setValue(message.key, message.value)
-                .then(() => {
-                  this._panel.webview.postMessage({
-                    command: 'storageUpdated',
-                    key: message.key,
-                  });
-                });
-            }
-            return;
-          case 'getTheme':
-            this._panel.webview.postMessage({
-              command: 'themeChanged',
-              theme: getVSCodeTheme(),
-            });
-            return;
-          case 'showNotification':
-            if (message.message) {
-              const notificationType = message.type === 'error' 
-                ? vscode.window.showErrorMessage 
-                : message.type === 'warning'
-                ? vscode.window.showWarningMessage
-                : vscode.window.showInformationMessage;
-              notificationType(message.message);
-            }
-            return;
-        }
+      (message: {
+        command: string;
+        key?: string;
+        value?: unknown;
+        message?: string;
+        type?: string;
+        path?: string;
+      }) => {
+        handleMessage(message, this._panel.webview.postMessage, {
+          storage: this._storage,
+          repositoriesService: this._repositoriesService,
+        });
       },
       null,
       this._disposables
@@ -181,10 +196,22 @@ class WebviewPanel {
   private _getHtmlForWebview(webview: vscode.Webview) {
     // Get the local path to main script run in the webview
     const scriptUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this._extensionUri, 'out', 'webview', 'assets', 'index.js')
+      vscode.Uri.joinPath(
+        this._extensionUri,
+        'out',
+        'webview',
+        'assets',
+        'index.js'
+      )
     );
     const styleUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this._extensionUri, 'out', 'webview', 'assets', 'index.css')
+      vscode.Uri.joinPath(
+        this._extensionUri,
+        'out',
+        'webview',
+        'assets',
+        'index.css'
+      )
     );
 
     // Use a nonce to only allow specific scripts to be run
@@ -223,7 +250,8 @@ class WebviewViewProvider implements vscode.WebviewViewProvider {
   constructor(
     private readonly _extensionUri: vscode.Uri,
     private readonly _storage: StorageService,
-    private readonly _context: vscode.ExtensionContext
+    private readonly _context: vscode.ExtensionContext,
+    private readonly _repositoriesService: RepositoriesService
   ) {}
 
   public resolveWebviewView(
@@ -244,61 +272,33 @@ class WebviewViewProvider implements vscode.WebviewViewProvider {
     webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
 
     // Listen for theme changes
-    const themeChangeDisposable = vscode.window.onDidChangeActiveColorTheme(() => {
-      if (this._view) {
-        this._view.webview.postMessage({
-          command: 'themeChanged',
-          theme: getVSCodeTheme(),
-        });
+    const themeChangeDisposable = vscode.window.onDidChangeActiveColorTheme(
+      () => {
+        if (this._view) {
+          this._view.webview.postMessage({
+            command: 'themeChanged',
+            theme: getVSCodeTheme(),
+          });
+        }
       }
-    });
+    );
     this._disposables.push(themeChangeDisposable);
     this._context.subscriptions.push(...this._disposables);
 
     // Handle messages from the webview
     webviewView.webview.onDidReceiveMessage(
-      (message: { command: string; key?: string; value?: unknown; message?: string; type?: string }) => {
-        switch (message.command) {
-          case 'getStorage':
-            if (message.key) {
-              this._storage.getValue(message.key).then((value) => {
-                webviewView.webview.postMessage({
-                  command: 'storageValue',
-                  key: message.key,
-                  value: value,
-                });
-              });
-            }
-            return;
-          case 'setStorage':
-            if (message.key !== undefined) {
-              this._storage
-                .setValue(message.key, message.value)
-                .then(() => {
-                  webviewView.webview.postMessage({
-                    command: 'storageUpdated',
-                    key: message.key,
-                  });
-                });
-            }
-            return;
-          case 'getTheme':
-            webviewView.webview.postMessage({
-              command: 'themeChanged',
-              theme: getVSCodeTheme(),
-            });
-            return;
-          case 'showNotification':
-            if (message.message) {
-              const notificationType = message.type === 'error' 
-                ? vscode.window.showErrorMessage 
-                : message.type === 'warning'
-                ? vscode.window.showWarningMessage
-                : vscode.window.showInformationMessage;
-              notificationType(message.message);
-            }
-            return;
-        }
+      (message: {
+        command: string;
+        key?: string;
+        value?: unknown;
+        message?: string;
+        type?: string;
+        path?: string;
+      }) => {
+        handleMessage(message, webviewView.webview.postMessage, {
+          storage: this._storage,
+          repositoriesService: this._repositoriesService,
+        });
       }
     );
   }
@@ -306,10 +306,22 @@ class WebviewViewProvider implements vscode.WebviewViewProvider {
   private _getHtmlForWebview(webview: vscode.Webview) {
     // Get the local path to main script run in the webview
     const scriptUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this._extensionUri, 'out', 'webview', 'assets', 'index.js')
+      vscode.Uri.joinPath(
+        this._extensionUri,
+        'out',
+        'webview',
+        'assets',
+        'index.js'
+      )
     );
     const styleUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this._extensionUri, 'out', 'webview', 'assets', 'index.css')
+      vscode.Uri.joinPath(
+        this._extensionUri,
+        'out',
+        'webview',
+        'assets',
+        'index.css'
+      )
     );
 
     // Use a nonce to only allow specific scripts to be run
@@ -343,4 +355,107 @@ function getNonce() {
     text += possible.charAt(Math.floor(Math.random() * possible.length));
   }
   return text;
+}
+
+function handleMessage(
+  message: Record<string, unknown>,
+  postMessage: (message: unknown) => void,
+  {
+    storage,
+    repositoriesService,
+  }: { storage: StorageService; repositoriesService: RepositoriesService }
+) {
+  handleStorageMessage(message, storage, postMessage);
+  handleThemeMessage(message, postMessage);
+  handleNotificationMessage(message);
+  handleOpenRepositoryMessage(message, repositoriesService);
+}
+
+function handleStorageMessage(
+  message: Record<string, unknown>,
+  storage: StorageService,
+  postMessage: (message: unknown) => void
+) {
+  switch (message.command) {
+    case 'getStorage':
+      storage.getValue(message.key as string).then(value => {
+        postMessage({
+          command: 'storageValue',
+          key: message.key,
+          value: value,
+        });
+      });
+
+      return;
+    case 'setStorage':
+      storage
+        .setValue(message.key as string, message.value as unknown)
+        .then(() => {
+          postMessage({
+            command: 'storageUpdated',
+            key: message.key,
+          });
+        });
+      return;
+  }
+}
+
+function handleThemeMessage(
+  message: Record<string, unknown>,
+  postMessage: (message: unknown) => void
+) {
+  switch (message.command) {
+    case 'getTheme':
+      postMessage({
+        command: 'themeChanged',
+        theme: getVSCodeTheme(),
+      });
+      return;
+  }
+}
+
+function handleNotificationMessage(message: Record<string, unknown>) {
+  switch (message.command) {
+    case 'showNotification':
+      if (message.message) {
+        const notificationType =
+          message.type === 'error'
+            ? vscode.window.showErrorMessage
+            : message.type === 'warning'
+              ? vscode.window.showWarningMessage
+              : vscode.window.showInformationMessage;
+        notificationType(message.message as string);
+      }
+      return;
+  }
+}
+
+function handleOpenRepositoryMessage(
+  message: Record<string, unknown>,
+  repositoriesService: RepositoriesService
+) {
+  switch (message.command) {
+    case 'openRepository':
+      if (message.path) {
+        const uri = vscode.Uri.file(message.path as string);
+        // Open folder in a new window
+        vscode.commands.executeCommand('vscode.openFolder', uri, true).then(
+          () => {
+            // Update lastOpened when repository is opened
+            repositoriesService
+              .updateLastOpened(message.path as string)
+              .catch(error => {
+                console.error('Failed to update lastOpened:', error);
+              });
+          },
+          error => {
+            console.error('Failed to open repository:', error);
+            vscode.window.showErrorMessage(
+              `Failed to open repository: ${error}`
+            );
+          }
+        );
+      }
+      return;
+  }
 }

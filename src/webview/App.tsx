@@ -1,5 +1,5 @@
 import { Section } from '@components/atoms';
-import { Releases, Todos } from '@components/templates';
+import { Releases, Repositories, Todos } from '@components/templates';
 import { default as React } from 'react';
 
 const App: React.FC = () => {
@@ -7,11 +7,9 @@ const App: React.FC = () => {
   // These are used directly in CSS, so no need to set them manually here
 
   return (
-    <div
-      className="w-full h-full m-0 p-0"
-    >
+    <div className="w-full h-full m-0 p-0">
       <Todos />
-      <Section title="Repositories" defaultExpanded />
+      <Repositories />
       <Releases />
       <Section title="Utilities" />
       <Section title="Git Helpers" />

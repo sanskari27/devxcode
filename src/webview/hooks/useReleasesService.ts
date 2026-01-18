@@ -47,7 +47,10 @@ export function useReleasesService() {
     // Listen for storage updates from extension
     const handleMessage = (event: MessageEvent) => {
       const message = event.data;
-      if (message.command === 'storageUpdated' && message.key === STORAGE_KEYS.RELEASES) {
+      if (
+        message.command === 'storageUpdated' &&
+        message.key === STORAGE_KEYS.RELEASES
+      ) {
         // Reload releases when storage is updated
         loadReleases();
       }
@@ -86,7 +89,10 @@ export function useReleasesService() {
   );
 
   const updateRelease = useCallback(
-    async (id: string, updates: Partial<Omit<Release, 'id'>>): Promise<Release> => {
+    async (
+      id: string,
+      updates: Partial<Omit<Release, 'id'>>
+    ): Promise<Release> => {
       const updatedRelease = await service.updateRelease(id, updates);
       // Refresh releases from service
       const allReleases = await service.getAllReleases();
@@ -123,7 +129,11 @@ export function useReleasesService() {
       changeId: string,
       updates: Partial<Omit<Change, 'id'>>
     ): Promise<Change> => {
-      const updatedChange = await service.updateChangeInRelease(releaseId, changeId, updates);
+      const updatedChange = await service.updateChangeInRelease(
+        releaseId,
+        changeId,
+        updates
+      );
       // Refresh releases from service
       const allReleases = await service.getAllReleases();
       setReleases(allReleases);
@@ -139,47 +149,58 @@ export function useReleasesService() {
     [service]
   );
 
-  const getChangeProgress = useCallback((change: Change): { completed: number; total: number } => {
-    const statusKeys = Object.keys(change.statusChecklist);
-    const total = statusKeys.length;
-    const completed = statusKeys.filter(
-      (key) => change.statusChecklist[key as keyof typeof change.statusChecklist]
-    ).length;
-    return { completed, total };
-  }, []);
+  const getChangeProgress = useCallback(
+    (change: Change): { completed: number; total: number } => {
+      const statusKeys = Object.keys(change.statusChecklist);
+      const total = statusKeys.length;
+      const completed = statusKeys.filter(
+        key =>
+          change.statusChecklist[key as keyof typeof change.statusChecklist]
+      ).length;
+      return { completed, total };
+    },
+    []
+  );
 
-  const getReleaseProgressSync = useCallback((release: Release): ReleaseProgress => {
-    if (release.changes.length === 0) {
-      return {
-        percentage: 0,
-        totalItems: 0,
-        completedItems: 0,
-      };
-    }
+  const getReleaseProgressSync = useCallback(
+    (release: Release): ReleaseProgress => {
+      if (release.changes.length === 0) {
+        return {
+          percentage: 0,
+          totalItems: 0,
+          completedItems: 0,
+        };
+      }
 
-    let totalItems = 0;
-    let completedItems = 0;
+      let totalItems = 0;
+      let completedItems = 0;
 
-    for (const change of release.changes) {
-      const statusKeys = Object.keys(change.statusChecklist) as Array<keyof typeof change.statusChecklist>;
-      totalItems += statusKeys.length;
+      for (const change of release.changes) {
+        const statusKeys = Object.keys(change.statusChecklist) as Array<
+          keyof typeof change.statusChecklist
+        >;
+        totalItems += statusKeys.length;
 
-      for (const status of statusKeys) {
-        if (change.statusChecklist[status]) {
-          completedItems++;
+        for (const status of statusKeys) {
+          if (change.statusChecklist[status]) {
+            completedItems++;
+          }
         }
       }
-    }
 
-    const percentage =
-      totalItems > 0 && completedItems > 0 ? Math.round((completedItems / totalItems) * 100 * 100) / 100 : 0;
+      const percentage =
+        totalItems > 0 && completedItems > 0
+          ? Math.round((completedItems / totalItems) * 100 * 100) / 100
+          : 0;
 
-    return {
-      percentage,
-      totalItems,
-      completedItems,
-    };
-  }, []);
+      return {
+        percentage,
+        totalItems,
+        completedItems,
+      };
+    },
+    []
+  );
 
   return {
     releases,

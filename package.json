@@ -10,7 +10,8 @@
         "Other"
     ],
     "activationEvents": [
-        "onCommand:devxcode.openWebview"
+        "onCommand:devxcode.openWebview",
+        "onStartupFinished"
     ],
     "main": "./out/consumers/extension.js",
     "contributes": {

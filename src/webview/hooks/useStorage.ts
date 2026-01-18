@@ -7,7 +7,9 @@ declare const vscode: {
 /**
  * Hook to interact with VS Code storage from the webview
  */
-export function useStorage<T>(key: string): [T | undefined, (value: T) => Promise<void>] {
+export function useStorage<T>(
+  key: string
+): [T | undefined, (value: T) => Promise<void>] {
   const [value, setValue] = useState<T | undefined>(undefined);
 
   useEffect(() => {

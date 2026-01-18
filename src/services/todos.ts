@@ -1,4 +1,3 @@
-import { showNotification } from '@src/webview/utils/notifications';
 import { STORAGE_KEYS } from '../lib/constants';
 import { StorageService } from './storage';
 
@@ -58,7 +57,7 @@ export class TodosService {
    */
   async getTodoById(id: string): Promise<Todo | undefined> {
     const todos = await this._getAllTodosData();
-    return todos.find((todo) => todo.id === id);
+    return todos.find(todo => todo.id === id);
   }
 
   /**
@@ -84,7 +83,7 @@ export class TodosService {
     updates: Partial<Omit<Todo, 'id' | 'createdAt'>>
   ): Promise<Todo> {
     const todos = await this._getAllTodosData();
-    const index = todos.findIndex((todo) => todo.id === id);
+    const index = todos.findIndex(todo => todo.id === id);
 
     if (index === -1) {
       throw new Error(`Todo with id ${id} not found`);
@@ -106,7 +105,7 @@ export class TodosService {
    */
   async deleteTodo(id: string): Promise<void> {
     const todos = await this._getAllTodosData();
-    const filteredTodos = todos.filter((todo) => todo.id !== id);
+    const filteredTodos = todos.filter(todo => todo.id !== id);
 
     if (filteredTodos.length === todos.length) {
       throw new Error(`Todo with id ${id} not found`);

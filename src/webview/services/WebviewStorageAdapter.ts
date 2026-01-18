@@ -148,7 +148,9 @@ export class WebviewStorageAdapter {
     window.removeEventListener('message', this.boundHandleMessage);
     // Reject all pending requests
     for (const [requestId, pending] of this.pendingRequests.entries()) {
-      pending.reject(new Error(`Storage adapter disposed, request cancelled: ${requestId}`));
+      pending.reject(
+        new Error(`Storage adapter disposed, request cancelled: ${requestId}`)
+      );
     }
     this.pendingRequests.clear();
   }

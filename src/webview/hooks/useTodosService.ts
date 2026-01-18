@@ -47,7 +47,10 @@ export function useTodosService() {
     // Listen for storage updates from extension
     const handleMessage = (event: MessageEvent) => {
       const message = event.data;
-      if (message.command === 'storageUpdated' && message.key === STORAGE_KEYS.TODOS) {
+      if (
+        message.command === 'storageUpdated' &&
+        message.key === STORAGE_KEYS.TODOS
+      ) {
         // Reload todos when storage is updated
         loadTodos();
       }
@@ -86,7 +89,10 @@ export function useTodosService() {
   );
 
   const updateTodo = useCallback(
-    async (id: string, updates: Partial<Omit<Todo, 'id' | 'createdAt'>>): Promise<Todo> => {
+    async (
+      id: string,
+      updates: Partial<Omit<Todo, 'id' | 'createdAt'>>
+    ): Promise<Todo> => {
       const updatedTodo = await service.updateTodo(id, updates);
       // Refresh todos from service
       const allTodos = await service.getAllTodos();

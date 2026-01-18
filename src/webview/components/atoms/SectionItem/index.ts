@@ -1,2 +1,1 @@
 export { SectionItem } from './SectionItem';
-

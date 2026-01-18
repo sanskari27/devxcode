@@ -8,7 +8,8 @@ import { StorageService } from './storage';
 export type ReleaseStatus =
   | 'Handover Completed'
   | 'Support Stamping'
-  | 'Security Stamping' | string;
+  | 'Security Stamping'
+  | string;
 
 /**
  * Change interface
@@ -58,8 +59,7 @@ const DEFAULT_STATUS_CHECKLIST: Record<ReleaseStatus, boolean> = {
 export class ReleasesService {
   private readonly STORAGE_KEY = STORAGE_KEYS.RELEASES;
 
-  constructor(
-    private storage: StorageService) {}
+  constructor(private storage: StorageService) {}
 
   /**
    * Generate a unique ID using timestamp and random string
@@ -97,7 +97,7 @@ export class ReleasesService {
    */
   async getReleaseById(id: string): Promise<Release | undefined> {
     const releases = await this._getAllReleasesData();
-    return releases.find((release) => release.id === id);
+    return releases.find(release => release.id === id);
   }
 
   /**
@@ -122,7 +122,7 @@ export class ReleasesService {
     updates: Partial<Omit<Release, 'id'>>
   ): Promise<Release> {
     const releases = await this._getAllReleasesData();
-    const index = releases.findIndex((release) => release.id === id);
+    const index = releases.findIndex(release => release.id === id);
 
     if (index === -1) {
       throw new Error(`Release with id ${id} not found`);
@@ -143,7 +143,7 @@ export class ReleasesService {
    */
   async deleteRelease(id: string): Promise<void> {
     const releases = await this._getAllReleasesData();
-    const filteredReleases = releases.filter((release) => release.id !== id);
+    const filteredReleases = releases.filter(release => release.id !== id);
 
     if (filteredReleases.length === releases.length) {
       throw new Error(`Release with id ${id} not found`);
@@ -186,7 +186,9 @@ export class ReleasesService {
     }
 
     const percentage =
-      totalItems > 0 ? Math.round((completedItems / totalItems) * 100 * 100) / 100 : 0;
+      totalItems > 0
+        ? Math.round((completedItems / totalItems) * 100 * 100) / 100
+        : 0;
 
     return {
       percentage,
@@ -203,7 +205,7 @@ export class ReleasesService {
     change: Omit<Change, 'id'>
   ): Promise<Change> {
     const releases = await this._getAllReleasesData();
-    const releaseIndex = releases.findIndex((r) => r.id === releaseId);
+    const releaseIndex = releases.findIndex(r => r.id === releaseId);
 
     if (releaseIndex === -1) {
       throw new Error(`Release with id ${releaseId} not found`);
@@ -234,18 +236,20 @@ export class ReleasesService {
     updates: Partial<Omit<Change, 'id'>>
   ): Promise<Change> {
     const releases = await this._getAllReleasesData();
-    const releaseIndex = releases.findIndex((r) => r.id === releaseId);
+    const releaseIndex = releases.findIndex(r => r.id === releaseId);
 
     if (releaseIndex === -1) {
       throw new Error(`Release with id ${releaseId} not found`);
     }
 
     const changeIndex = releases[releaseIndex].changes.findIndex(
-      (c) => c.id === changeId
+      c => c.id === changeId
     );
 
     if (changeIndex === -1) {
-      throw new Error(`Change with id ${changeId} not found in release ${releaseId}`);
+      throw new Error(
+        `Change with id ${changeId} not found in release ${releaseId}`
+      );
     }
 
     const existingChange = releases[releaseIndex].changes[changeIndex];
@@ -278,7 +282,7 @@ export class ReleasesService {
     changeId: string
   ): Promise<void> {
     const releases = await this._getAllReleasesData();
-    const releaseIndex = releases.findIndex((r) => r.id === releaseId);
+    const releaseIndex = releases.findIndex(r => r.id === releaseId);
 
     if (releaseIndex === -1) {
       throw new Error(`Release with id ${releaseId} not found`);
@@ -286,11 +290,13 @@ export class ReleasesService {
 
     const initialLength = releases[releaseIndex].changes.length;
     releases[releaseIndex].changes = releases[releaseIndex].changes.filter(
-      (c) => c.id !== changeId
+      c => c.id !== changeId
     );
 
     if (releases[releaseIndex].changes.length === initialLength) {
-      throw new Error(`Change with id ${changeId} not found in release ${releaseId}`);
+      throw new Error(
+        `Change with id ${changeId} not found in release ${releaseId}`
+      );
     }
 
     await this._saveAllReleasesData(releases);

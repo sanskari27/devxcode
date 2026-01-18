@@ -42,10 +42,14 @@ export interface VSCodeTheme {
  */
 export function getVSCodeTheme(): VSCodeTheme {
   const colorTheme = vscode.window.activeColorTheme;
-  
-  const kind = colorTheme.kind === vscode.ColorThemeKind.Light ? 'light' : 
-               colorTheme.kind === vscode.ColorThemeKind.Dark ? 'dark' : 'highContrast';
-  
+
+  const kind =
+    colorTheme.kind === vscode.ColorThemeKind.Light
+      ? 'light'
+      : colorTheme.kind === vscode.ColorThemeKind.Dark
+        ? 'dark'
+        : 'highContrast';
+
   // Return CSS variable names - VS Code webviews automatically provide these
   // The webview will use these variables directly via var() in CSS
   return {
@@ -55,22 +59,30 @@ export function getVSCodeTheme(): VSCodeTheme {
       '--vscode-editor-foreground': 'var(--vscode-editor-foreground)',
       '--vscode-sideBar-background': 'var(--vscode-sideBar-background)',
       '--vscode-sideBar-foreground': 'var(--vscode-sideBar-foreground)',
-      '--vscode-sideBarTitle-foreground': 'var(--vscode-sideBarTitle-foreground)',
-      '--vscode-list-activeSelectionBackground': 'var(--vscode-list-activeSelectionBackground)',
-      '--vscode-list-activeSelectionForeground': 'var(--vscode-list-activeSelectionForeground)',
+      '--vscode-sideBarTitle-foreground':
+        'var(--vscode-sideBarTitle-foreground)',
+      '--vscode-list-activeSelectionBackground':
+        'var(--vscode-list-activeSelectionBackground)',
+      '--vscode-list-activeSelectionForeground':
+        'var(--vscode-list-activeSelectionForeground)',
       '--vscode-list-hoverBackground': 'var(--vscode-list-hoverBackground)',
       '--vscode-input-background': 'var(--vscode-input-background)',
       '--vscode-input-foreground': 'var(--vscode-input-foreground)',
       '--vscode-input-border': 'var(--vscode-input-border)',
-      '--vscode-input-placeholderForeground': 'var(--vscode-input-placeholderForeground)',
+      '--vscode-input-placeholderForeground':
+        'var(--vscode-input-placeholderForeground)',
       '--vscode-button-background': 'var(--vscode-button-background)',
       '--vscode-button-foreground': 'var(--vscode-button-foreground)',
       '--vscode-button-hoverBackground': 'var(--vscode-button-hoverBackground)',
-      '--vscode-button-secondaryBackground': 'var(--vscode-button-secondaryBackground)',
-      '--vscode-button-secondaryForeground': 'var(--vscode-button-secondaryForeground)',
-      '--vscode-button-secondaryHoverBackground': 'var(--vscode-button-secondaryHoverBackground)',
+      '--vscode-button-secondaryBackground':
+        'var(--vscode-button-secondaryBackground)',
+      '--vscode-button-secondaryForeground':
+        'var(--vscode-button-secondaryForeground)',
+      '--vscode-button-secondaryHoverBackground':
+        'var(--vscode-button-secondaryHoverBackground)',
       '--vscode-textLink-foreground': 'var(--vscode-textLink-foreground)',
-      '--vscode-textLink-activeForeground': 'var(--vscode-textLink-activeForeground)',
+      '--vscode-textLink-activeForeground':
+        'var(--vscode-textLink-activeForeground)',
       '--vscode-focusBorder': 'var(--vscode-focusBorder)',
       '--vscode-errorForeground': 'var(--vscode-errorForeground)',
       '--vscode-warningForeground': 'var(--vscode-warningForeground)',
@@ -78,7 +90,8 @@ export function getVSCodeTheme(): VSCodeTheme {
       '--vscode-descriptionForeground': 'var(--vscode-descriptionForeground)',
       '--vscode-icon-foreground': 'var(--vscode-icon-foreground)',
       '--vscode-panel-border': 'var(--vscode-panel-border)',
-      '--vscode-inputOption-hoverBorder': 'var(--vscode-inputOption-hoverBorder)',
+      '--vscode-inputOption-hoverBorder':
+        'var(--vscode-inputOption-hoverBorder)',
     },
   };
 }
