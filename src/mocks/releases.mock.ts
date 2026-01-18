@@ -1,4 +1,4 @@
-import type { Release, ReleaseStatus } from '../services/releases';
+import type { Release } from '../services/releases';
 
 /**
  * Mock releases data for testing and development

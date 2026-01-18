@@ -1,5 +1,11 @@
 import { Section } from '@components/atoms';
-import { Dumps, Releases, Repositories, Todos } from '@components/templates';
+import {
+  Dumps,
+  GitHubHelpers,
+  Releases,
+  Repositories,
+  Todos,
+} from '@components/templates';
 import { default as React } from 'react';
 
 const App: React.FC = () => {
@@ -12,7 +18,7 @@ const App: React.FC = () => {
       <Repositories />
       <Releases />
       <Section title="Utilities" />
-      <Section title="Git Helpers" />
+      <GitHubHelpers />
       <Dumps />
       <Section title="Knowledge Base" />
     </div>

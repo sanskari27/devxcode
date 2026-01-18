@@ -1,6 +1,6 @@
 import { Section, SectionItem } from '@components/atoms';
 import { Alert } from '@components/molecules';
-import { Plus, Trash } from 'lucide-react';
+import { Brain, Plus, Trash } from 'lucide-react';
 import React from 'react';
 import { useDumpsService } from '../../../hooks/useDumpsService';
 
@@ -52,6 +52,7 @@ export const Dumps: React.FC = () => {
             name={dumpPreview}
             onClick={() => handleDumpClick(dump.id)}
             className="line-clamp-2"
+            icon={Brain}
             actionIcon={Trash}
             action={() => handleDeleteDump(dump.id)}
           />

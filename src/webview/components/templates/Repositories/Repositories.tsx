@@ -1,6 +1,7 @@
 import { SearchBar, Section, SectionItem } from '@components/atoms';
 import React, { useMemo, useState } from 'react';
 import { useRepositoriesService } from '../../../hooks/useRepositoriesService';
+import { FolderCode } from 'lucide-react';
 
 export const Repositories: React.FC = () => {
   const [searchValue, setSearchValue] = useState('');
@@ -51,6 +52,7 @@ export const Repositories: React.FC = () => {
           key={repository.path}
           name={repository.nickname || repository.name}
           onClick={() => handleOpenRepository(repository.path)}
+          icon={FolderCode}
         />
       ))}
     </Section>
