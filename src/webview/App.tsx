@@ -1,18 +1,9 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Releases, Section } from './components';
-import { useTheme } from './hooks/useTheme';
 
 const App: React.FC = () => {
-  const theme = useTheme();
-
-  useEffect(() => {
-    if (theme?.colors) {
-      const root = document.documentElement;
-      Object.entries(theme.colors).forEach(([key, value]) => {
-        root.style.setProperty(key, `var(${value})`);
-      });
-    }
-  }, [theme]);
+  // VS Code webviews automatically provide CSS variables like --vscode-editor-background
+  // These are used directly in CSS, so no need to set them manually here
 
   return (
     <div

@@ -96,12 +96,6 @@ class WebviewPanel {
     // Set the webview's initial html content
     this._update();
 
-    // Send initial theme
-    this._panel.webview.postMessage({
-      command: 'themeChanged',
-      theme: getVSCodeTheme(),
-    });
-
     // Listen for theme changes
     const themeChangeDisposable = vscode.window.onDidChangeActiveColorTheme(() => {
       this._panel.webview.postMessage({
@@ -248,12 +242,6 @@ class WebviewViewProvider implements vscode.WebviewViewProvider {
     };
 
     webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
-
-    // Send initial theme
-    webviewView.webview.postMessage({
-      command: 'themeChanged',
-      theme: getVSCodeTheme(),
-    });
 
     // Listen for theme changes
     const themeChangeDisposable = vscode.window.onDidChangeActiveColorTheme(() => {

@@ -1,4 +1,3 @@
-import { showNotification } from '@src/webview/utils/notifications';
 import * as vscode from 'vscode';
 
 export interface VSCodeTheme {
@@ -36,58 +35,50 @@ export interface VSCodeTheme {
 }
 
 /**
- * Get VS Code theme colors
- * Note: VS Code webviews automatically provide CSS variables like --vscode-editor-background
- * We return the CSS variable names so the webview can use them directly via var() in CSS
- * The webview will automatically resolve these from VS Code's theme
+ * Get VS Code theme information
+ * VS Code webviews automatically provide CSS variables like --vscode-editor-background
+ * We return the CSS variable names so the webview can reference them
+ * The actual color values are provided by VS Code automatically
  */
 export function getVSCodeTheme(): VSCodeTheme {
   const colorTheme = vscode.window.activeColorTheme;
   
-  // Helper to get CSS variable name
-  // VS Code webviews automatically provide these variables, so we just return the variable reference
-  const getColorVar = (colorId: string): string => {
-    // Convert color ID (e.g., 'editor.background') to CSS variable name (e.g., '--vscode-editor-background')
-    // Return as a CSS variable reference that webview can use
-    const cssVarName = `--vscode-${colorId.replace(/\./g, '-')}`;
-    // Return the variable name without var() wrapper - App.tsx will use it correctly
-    return cssVarName;
-  };
-
   const kind = colorTheme.kind === vscode.ColorThemeKind.Light ? 'light' : 
                colorTheme.kind === vscode.ColorThemeKind.Dark ? 'dark' : 'highContrast';
   
+  // Return CSS variable names - VS Code webviews automatically provide these
+  // The webview will use these variables directly via var() in CSS
   return {
     kind,
     colors: {
-      '--vscode-editor-background': getColorVar('editor.background'),
-      '--vscode-editor-foreground': getColorVar('editor.foreground'),
-      '--vscode-sideBar-background': getColorVar('sideBar.background'),
-      '--vscode-sideBar-foreground': getColorVar('sideBar.foreground'),
-      '--vscode-sideBarTitle-foreground': getColorVar('sideBarTitle.foreground'),
-      '--vscode-list-activeSelectionBackground': getColorVar('list.activeSelectionBackground'),
-      '--vscode-list-activeSelectionForeground': getColorVar('list.activeSelectionForeground'),
-      '--vscode-list-hoverBackground': getColorVar('list.hoverBackground'),
-      '--vscode-input-background': getColorVar('input.background'),
-      '--vscode-input-foreground': getColorVar('input.foreground'),
-      '--vscode-input-border': getColorVar('input.border'),
-      '--vscode-input-placeholderForeground': getColorVar('input.placeholderForeground'),
-      '--vscode-button-background': getColorVar('button.background'),
-      '--vscode-button-foreground': getColorVar('button.foreground'),
-      '--vscode-button-hoverBackground': getColorVar('button.hoverBackground'),
-      '--vscode-button-secondaryBackground': getColorVar('button.secondaryBackground'),
-      '--vscode-button-secondaryForeground': getColorVar('button.secondaryForeground'),
-      '--vscode-button-secondaryHoverBackground': getColorVar('button.secondaryHoverBackground'),
-      '--vscode-textLink-foreground': getColorVar('textLink.foreground'),
-      '--vscode-textLink-activeForeground': getColorVar('textLink.activeForeground'),
-      '--vscode-focusBorder': getColorVar('focusBorder'),
-      '--vscode-errorForeground': getColorVar('errorForeground'),
-      '--vscode-warningForeground': getColorVar('warningForeground'),
-      '--vscode-foreground': getColorVar('foreground'),
-      '--vscode-descriptionForeground': getColorVar('descriptionForeground'),
-      '--vscode-icon-foreground': getColorVar('icon.foreground'),
-      '--vscode-panel-border': getColorVar('panel.border'),
-      '--vscode-inputOption-hoverBorder': getColorVar('inputOption.hoverBorder'),
+      '--vscode-editor-background': 'var(--vscode-editor-background)',
+      '--vscode-editor-foreground': 'var(--vscode-editor-foreground)',
+      '--vscode-sideBar-background': 'var(--vscode-sideBar-background)',
+      '--vscode-sideBar-foreground': 'var(--vscode-sideBar-foreground)',
+      '--vscode-sideBarTitle-foreground': 'var(--vscode-sideBarTitle-foreground)',
+      '--vscode-list-activeSelectionBackground': 'var(--vscode-list-activeSelectionBackground)',
+      '--vscode-list-activeSelectionForeground': 'var(--vscode-list-activeSelectionForeground)',
+      '--vscode-list-hoverBackground': 'var(--vscode-list-hoverBackground)',
+      '--vscode-input-background': 'var(--vscode-input-background)',
+      '--vscode-input-foreground': 'var(--vscode-input-foreground)',
+      '--vscode-input-border': 'var(--vscode-input-border)',
+      '--vscode-input-placeholderForeground': 'var(--vscode-input-placeholderForeground)',
+      '--vscode-button-background': 'var(--vscode-button-background)',
+      '--vscode-button-foreground': 'var(--vscode-button-foreground)',
+      '--vscode-button-hoverBackground': 'var(--vscode-button-hoverBackground)',
+      '--vscode-button-secondaryBackground': 'var(--vscode-button-secondaryBackground)',
+      '--vscode-button-secondaryForeground': 'var(--vscode-button-secondaryForeground)',
+      '--vscode-button-secondaryHoverBackground': 'var(--vscode-button-secondaryHoverBackground)',
+      '--vscode-textLink-foreground': 'var(--vscode-textLink-foreground)',
+      '--vscode-textLink-activeForeground': 'var(--vscode-textLink-activeForeground)',
+      '--vscode-focusBorder': 'var(--vscode-focusBorder)',
+      '--vscode-errorForeground': 'var(--vscode-errorForeground)',
+      '--vscode-warningForeground': 'var(--vscode-warningForeground)',
+      '--vscode-foreground': 'var(--vscode-foreground)',
+      '--vscode-descriptionForeground': 'var(--vscode-descriptionForeground)',
+      '--vscode-icon-foreground': 'var(--vscode-icon-foreground)',
+      '--vscode-panel-border': 'var(--vscode-panel-border)',
+      '--vscode-inputOption-hoverBorder': 'var(--vscode-inputOption-hoverBorder)',
     },
   };
 }
