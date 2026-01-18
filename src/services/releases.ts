@@ -1,4 +1,5 @@
 import { STORAGE_KEYS } from '../lib/constants';
+import { generateId } from '../lib/utils';
 import { StorageService } from './storage';
 
 /**
@@ -62,15 +63,6 @@ export class ReleasesService {
   constructor(private storage: StorageService) {}
 
   /**
-   * Generate a unique ID using timestamp and random string
-   */
-  private _generateId(): string {
-    const timestamp = Date.now().toString(36);
-    const randomStr = Math.random().toString(36).substring(2, 9);
-    return `${timestamp}-${randomStr}`;
-  }
-
-  /**
    * Get all releases from storage
    */
   private async _getAllReleasesData(): Promise<Release[]> {
@@ -107,7 +99,7 @@ export class ReleasesService {
     const releases = await this._getAllReleasesData();
     const newRelease: Release = {
       ...release,
-      id: this._generateId(),
+      id: generateId('release'),
     };
     releases.push(newRelease);
     await this._saveAllReleasesData(releases);
@@ -213,7 +205,7 @@ export class ReleasesService {
 
     const newChange: Change = {
       ...change,
-      id: this._generateId(),
+      id: generateId('change'),
       // Ensure all status checklist items are present
       statusChecklist: {
         ...DEFAULT_STATUS_CHECKLIST,

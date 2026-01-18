@@ -11,6 +11,7 @@ export const STORAGE_KEYS = {
   RELEASES: 'devxcode.releases',
   TODOS: 'devxcode.todos',
   REPOSITORIES: 'devxcode.repositories',
+  DUMPS: 'devxcode.dumps',
 } as const;
 
 /**

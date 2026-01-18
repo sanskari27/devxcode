@@ -1,5 +1,7 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { STORAGE_KEYS } from '../lib/constants';
+import { DumpsService } from '../services/dumps';
 import { RepositoriesService } from '../services/repositories';
 import { StorageService } from '../services/storage';
 import { getVSCodeTheme } from '../services/theme';
@@ -16,6 +18,9 @@ export function activate(context: vscode.ExtensionContext) {
 
   // Initialize repositories service
   const repositoriesService = new RepositoriesService(storage);
+
+  // Initialize dumps service
+  const dumpsService = new DumpsService(storage);
 
   // Check current workspace and add/update repository on activation
   const checkCurrentWorkspace = async () => {
@@ -48,7 +53,9 @@ export function activate(context: vscode.ExtensionContext) {
       WebviewPanel.createOrShow(
         context.extensionUri,
         storage,
-        repositoriesService
+        repositoriesService,
+        dumpsService,
+        context
       );
     }
   );
@@ -58,7 +65,8 @@ export function activate(context: vscode.ExtensionContext) {
     context.extensionUri,
     storage,
     context,
-    repositoriesService
+    repositoriesService,
+    dumpsService
   );
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider(
@@ -86,12 +94,16 @@ class WebviewPanel {
   private readonly _extensionUri: vscode.Uri;
   private readonly _storage: StorageService;
   private readonly _repositoriesService: RepositoriesService;
+  private readonly _dumpsService: DumpsService;
+  private readonly _context: vscode.ExtensionContext;
   private _disposables: vscode.Disposable[] = [];
 
   public static createOrShow(
     extensionUri: vscode.Uri,
     storage: StorageService,
-    repositoriesService: RepositoriesService
+    repositoriesService: RepositoriesService,
+    dumpsService: DumpsService,
+    context: vscode.ExtensionContext
   ) {
     const column = vscode.window.activeTextEditor
       ? vscode.window.activeTextEditor.viewColumn
@@ -121,7 +133,9 @@ class WebviewPanel {
       panel,
       extensionUri,
       storage,
-      repositoriesService
+      repositoriesService,
+      dumpsService,
+      context
     );
   }
 
@@ -129,12 +143,16 @@ class WebviewPanel {
     panel: vscode.WebviewPanel,
     extensionUri: vscode.Uri,
     storage: StorageService,
-    repositoriesService: RepositoriesService
+    repositoriesService: RepositoriesService,
+    dumpsService: DumpsService,
+    context: vscode.ExtensionContext
   ) {
     this._panel = panel;
     this._extensionUri = extensionUri;
     this._storage = storage;
     this._repositoriesService = repositoriesService;
+    this._dumpsService = dumpsService;
+    this._context = context;
 
     // Set the webview's initial html content
     this._update();
@@ -164,9 +182,25 @@ class WebviewPanel {
         type?: string;
         path?: string;
       }) => {
-        handleMessage(message, this._panel.webview.postMessage, {
+        // Create a safe postMessage wrapper that handles errors gracefully
+        const safePostMessage = (msg: unknown) => {
+          try {
+            if (this._panel) {
+              this._panel.webview.postMessage(msg);
+            }
+          } catch (error) {
+            // Webview might have been disposed, ignore the error
+            console.debug(
+              'Failed to post message to webview (may be disposed):',
+              error
+            );
+          }
+        };
+        handleMessage(message, safePostMessage, {
           storage: this._storage,
           repositoriesService: this._repositoriesService,
+          dumpsService: this._dumpsService,
+          context: this._context,
         });
       },
       null,
@@ -251,7 +285,8 @@ class WebviewViewProvider implements vscode.WebviewViewProvider {
     private readonly _extensionUri: vscode.Uri,
     private readonly _storage: StorageService,
     private readonly _context: vscode.ExtensionContext,
-    private readonly _repositoriesService: RepositoriesService
+    private readonly _repositoriesService: RepositoriesService,
+    private readonly _dumpsService: DumpsService
   ) {}
 
   public resolveWebviewView(
@@ -295,9 +330,21 @@ class WebviewViewProvider implements vscode.WebviewViewProvider {
         type?: string;
         path?: string;
       }) => {
-        handleMessage(message, webviewView.webview.postMessage, {
+        // Create a safe postMessage wrapper that checks if view is still valid
+        const safePostMessage = (msg: unknown) => {
+          try {
+            if (this._view && this._view.webview) {
+              this._view.webview.postMessage(msg);
+            }
+          } catch (error) {
+            console.error('Failed to post message to webview:', error);
+          }
+        };
+        handleMessage(message, safePostMessage, {
           storage: this._storage,
           repositoriesService: this._repositoriesService,
+          dumpsService: this._dumpsService,
+          context: this._context,
         });
       }
     );
@@ -363,12 +410,27 @@ function handleMessage(
   {
     storage,
     repositoriesService,
-  }: { storage: StorageService; repositoriesService: RepositoriesService }
+    dumpsService,
+    context,
+  }: {
+    storage: StorageService;
+    repositoriesService: RepositoriesService;
+    dumpsService: DumpsService;
+    context: vscode.ExtensionContext;
+  }
 ) {
+  console.log('handleMessage', message);
   handleStorageMessage(message, storage, postMessage);
   handleThemeMessage(message, postMessage);
   handleNotificationMessage(message);
   handleOpenRepositoryMessage(message, repositoriesService);
+  handleOpenDumpEditorMessage(
+    message,
+    dumpsService,
+    context,
+    storage,
+    postMessage
+  );
 }
 
 function handleStorageMessage(
@@ -456,6 +518,83 @@ function handleOpenRepositoryMessage(
           }
         );
       }
+      return;
+  }
+}
+
+async function handleOpenDumpEditorMessage(
+  message: Record<string, unknown>,
+  dumpsService: DumpsService,
+  context: vscode.ExtensionContext,
+  storage: StorageService,
+  postMessage: (message: unknown) => void
+) {
+  switch (message.command) {
+    case 'openDumpEditor':
+      if (!message.dumpId || typeof message.dumpId !== 'string') {
+        return;
+      }
+      vscode.window.showInformationMessage(
+        `Opening dump editor for ${message.dumpId}`
+      );
+      try {
+        const dumpId = message.dumpId as string;
+        const dump = await dumpsService.getDumpById(dumpId);
+
+        if (!dump) {
+          vscode.window.showErrorMessage(`Dump with id ${dumpId} not found`);
+          return;
+        }
+
+        // Ensure dumps directory exists
+        const dumpsDir = vscode.Uri.joinPath(context.globalStorageUri, 'dumps');
+        try {
+          await vscode.workspace.fs.stat(dumpsDir);
+        } catch {
+          // Directory doesn't exist, create it
+          await vscode.workspace.fs.createDirectory(dumpsDir);
+        }
+
+        // Create/update temp file
+        const fileUri = vscode.Uri.joinPath(dumpsDir, `${dumpId}.txt`);
+        const content = Buffer.from(dump.content, 'utf8');
+        await vscode.workspace.fs.writeFile(fileUri, content);
+
+        // Open file in editor
+        const document = await vscode.workspace.openTextDocument(fileUri);
+        await vscode.window.showTextDocument(document, {
+          preview: false,
+        });
+
+        // Set up save listener for this dump file
+        const saveListener = vscode.workspace.onDidSaveTextDocument(
+          async savedDocument => {
+            if (savedDocument.uri.toString() === fileUri.toString()) {
+              try {
+                const savedContent = savedDocument.getText();
+                await dumpsService.updateDump(dumpId, {
+                  content: savedContent,
+                });
+                // Notify webview of storage update
+                postMessage({
+                  command: 'storageUpdated',
+                  key: STORAGE_KEYS.DUMPS,
+                });
+              } catch (error) {
+                console.error('Failed to update dump:', error);
+                vscode.window.showErrorMessage(`Failed to save dump: ${error}`);
+              }
+            }
+          }
+        );
+
+        // Store listener in context subscriptions (will be cleaned up on deactivation)
+        context.subscriptions.push(saveListener);
+      } catch (error) {
+        console.error('Failed to open dump editor:', error);
+        vscode.window.showErrorMessage(`Failed to open dump editor: ${error}`);
+      }
+
       return;
   }
 }

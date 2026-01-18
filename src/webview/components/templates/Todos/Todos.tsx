@@ -1,13 +1,14 @@
 import { RadioButton, Section } from '@components/atoms';
 import { Alert } from '@components/molecules';
+import { cn } from '@lib/utils';
 import { Todo } from '@services/todos';
 import { showNotification } from '@src/webview/utils/notifications';
-import { Plus } from 'lucide-react';
+import { Plus, Trash } from 'lucide-react';
 import React, { useMemo } from 'react';
 import { useTodosService } from '../../../hooks/useTodosService';
 
 export const Todos: React.FC = () => {
-  const { todos, createTodo, updateTodo } = useTodosService();
+  const { todos, createTodo, updateTodo, deleteTodo } = useTodosService();
 
   const handleAddTodo = () => {
     Alert.title('Add New Todo')
@@ -82,17 +83,35 @@ export const Todos: React.FC = () => {
           onClick={() => handleToggleCompleted(todo.id)}
         />
       ))}
-      <Section title="Completed" contentClassName="mx-2">
-        {sortedCompletedTodos.map(todo => (
-          <RadioButton
-            key={todo.id}
-            label={todo.message}
-            checked={true}
-            onClick={() => handleToggleCompleted(todo.id)}
-            className={'line-through'}
-          />
-        ))}
-      </Section>
+      {sortedCompletedTodos.length > 0 && (
+        <Section title="Completed" contentClassName="mx-2">
+          {sortedCompletedTodos.map(todo => (
+            <div key={todo.id} className="flex items-center gap-2">
+              <RadioButton
+                label={todo.message}
+                checked={true}
+                onClick={() => handleToggleCompleted(todo.id)}
+                className={'line-through'}
+              />
+              <button
+                onClick={e => {
+                  e.stopPropagation();
+                  deleteTodo(todo.id);
+                }}
+                className={cn(
+                  'p-1 rounded cursor-pointer ml-auto -mr-2',
+                  'hover:bg-[var(--vscode-list-hoverBackground)]',
+                  'transition-colors',
+                  'flex items-center justify-center'
+                )}
+                tabIndex={0}
+              >
+                <Trash className="h-3.5 w-3.5 text-[var(--vscode-icon-foreground)]" />
+              </button>
+            </div>
+          ))}
+        </Section>
+      )}
     </Section>
   );
 };

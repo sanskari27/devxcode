@@ -1,14 +1,5 @@
 import type { Release, ReleaseStatus } from '../services/releases';
 
-const RELEASE_STATUSES: ReleaseStatus[] = [
-  'Handover Completed',
-  'Support Stamping',
-  'Security Stamping',
-  'SIT Deployed',
-  'UAT Deployed',
-  'PROD Deployed',
-];
-
 /**
  * Mock releases data for testing and development
  */

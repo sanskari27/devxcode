@@ -1,4 +1,5 @@
 import { STORAGE_KEYS } from '../lib/constants';
+import { generateId } from '../lib/utils';
 import { StorageService } from './storage';
 
 /**
@@ -20,15 +21,6 @@ export class TodosService {
   private readonly STORAGE_KEY = STORAGE_KEYS.TODOS;
 
   constructor(private storage: StorageService) {}
-
-  /**
-   * Generate a unique ID using timestamp and random string
-   */
-  private _generateId(): string {
-    const timestamp = Date.now().toString(36);
-    const randomStr = Math.random().toString(36).substring(2, 9);
-    return `${timestamp}-${randomStr}`;
-  }
 
   /**
    * Get all todos from storage
@@ -67,7 +59,7 @@ export class TodosService {
     const todos = await this._getAllTodosData();
     const newTodo: Todo = {
       ...todo,
-      id: this._generateId(),
+      id: generateId('todo'),
       createdAt: new Date().toISOString(),
     };
     todos.push(newTodo);
