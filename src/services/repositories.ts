@@ -6,13 +6,14 @@ import { StorageService } from './storage';
 
 /**
  * Repository interface
- * Represents a single repository with name, path, nickname, and last opened timestamp
+ * Represents a single repository with name, path, nickname, last opened timestamp, and pinned status
  */
 export interface Repository {
   name: string;
   path: string;
   nickname: string;
   lastOpened: string;
+  pinned: boolean;
 }
 
 /**
@@ -26,12 +27,28 @@ export class RepositoriesService {
 
   /**
    * Get all repositories from storage
+   * Migrates old repositories to include pinned field if missing
    */
   private async _getAllRepositoriesData(): Promise<Repository[]> {
     const repositories = await this.storage.getValue<Repository[]>(
       this.STORAGE_KEY
     );
-    return repositories ?? [];
+    if (!repositories) {
+      return [];
+    }
+    
+    // Migrate old repositories that don't have pinned field
+    const needsMigration = repositories.some(repo => repo.pinned === undefined);
+    if (needsMigration) {
+      const migratedRepositories = repositories.map(repo => ({
+        ...repo,
+        pinned: repo.pinned ?? false,
+      }));
+      await this._saveAllRepositoriesData(migratedRepositories);
+      return migratedRepositories;
+    }
+    
+    return repositories;
   }
 
   /**
@@ -86,6 +103,7 @@ export class RepositoriesService {
       path,
       nickname,
       lastOpened: new Date().toISOString(),
+      pinned: false,
     };
 
     repositories.push(newRepository);
@@ -140,6 +158,62 @@ export class RepositoriesService {
       return this.updateLastOpened(path);
     } else {
       return this.addRepository(name, path);
+    }
+  }
+
+  /**
+   * Pin a repository by path
+   */
+  async pinRepository(path: string): Promise<Repository> {
+    const repositories = await this._getAllRepositoriesData();
+    const index = repositories.findIndex(repo => repo.path === path);
+
+    if (index === -1) {
+      throw new Error(`Repository with path ${path} not found`);
+    }
+
+    repositories[index] = {
+      ...repositories[index],
+      pinned: true,
+    };
+
+    await this._saveAllRepositoriesData(repositories);
+    return repositories[index];
+  }
+
+  /**
+   * Unpin a repository by path
+   */
+  async unpinRepository(path: string): Promise<Repository> {
+    const repositories = await this._getAllRepositoriesData();
+    const index = repositories.findIndex(repo => repo.path === path);
+
+    if (index === -1) {
+      throw new Error(`Repository with path ${path} not found`);
+    }
+
+    repositories[index] = {
+      ...repositories[index],
+      pinned: false,
+    };
+
+    await this._saveAllRepositoriesData(repositories);
+    return repositories[index];
+  }
+
+  /**
+   * Toggle pin status of a repository
+   */
+  async togglePinRepository(path: string): Promise<Repository> {
+    const repository = await this.findRepositoryByPath(path);
+    if (!repository) {
+      throw new Error(`Repository with path ${path} not found`);
+    }
+
+    if (repository.pinned) {
+      return this.unpinRepository(path);
+    } else {
+      return this.pinRepository(path);
     }
   }
 }

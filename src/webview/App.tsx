@@ -21,7 +21,6 @@ const App: React.FC = () => {
       <Utilities />
       <Releases />
       <Dumps />
-      <Section title="Visual Notes" />
     </div>
   );
 };

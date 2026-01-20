@@ -123,6 +123,16 @@ export function useRepositoriesService() {
     [service]
   );
 
+  const togglePinRepository = useCallback(
+    async (path: string): Promise<void> => {
+      await service.togglePinRepository(path);
+      // Refresh repositories from service
+      const allRepositories = await service.getAllRepositories();
+      setRepositories(allRepositories);
+    },
+    [service]
+  );
+
   return {
     repositories,
     isLoading,
@@ -130,5 +140,6 @@ export function useRepositoriesService() {
     addRepository,
     removeRepository,
     openRepository,
+    togglePinRepository,
   };
 }

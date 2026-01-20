@@ -74,7 +74,7 @@ export const Section: React.FC<SectionProps> = ({
                 action();
               }}
               className={cn(
-                'p-1 rounded cursor-pointer',
+                'px-1 py-0.5 rounded cursor-pointer',
                 'hover:bg-[var(--vscode-list-hoverBackground)]',
                 'transition-colors',
                 'flex items-center justify-center'
