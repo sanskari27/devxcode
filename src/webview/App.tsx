@@ -5,6 +5,7 @@ import {
   Releases,
   Repositories,
   Todos,
+  Utilities,
 } from '@components/templates';
 import { default as React } from 'react';
 
@@ -16,9 +17,9 @@ const App: React.FC = () => {
     <div className="w-full h-full m-0 p-0">
       <Todos />
       <Repositories />
-      <Releases />
-      <Section title="Utilities" />
       <GitHubHelpers />
+      <Utilities />
+      <Releases />
       <Dumps />
       <Section title="Knowledge Base" />
     </div>

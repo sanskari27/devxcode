@@ -3,3 +3,4 @@ export { GitHubHelpers } from './GitHubHelpers';
 export { Releases } from './Releases';
 export { Repositories } from './Repositories';
 export { Todos } from './Todos';
+export { Utilities } from './Utilities';

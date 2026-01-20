@@ -1,6 +1,7 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
+import { ToolEditorManager } from './components/templates/Utilities/ToolEditorManager';
 import './index.css';
 
 const container = document.getElementById('root');
@@ -9,8 +10,22 @@ if (!container) {
 }
 
 const root = createRoot(container);
-root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
+
+// Check if we're in a tool editor webview
+const toolId = (window as any).toolId;
+
+if (toolId) {
+  // Render tool editor
+  root.render(
+    <React.StrictMode>
+      <ToolEditorManager toolId={toolId} />
+    </React.StrictMode>
+  );
+} else {
+  // Render main app
+  root.render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>
+  );
+}

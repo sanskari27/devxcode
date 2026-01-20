@@ -38,7 +38,6 @@ export const Dumps: React.FC = () => {
       title="Dumps"
       action={handleAddDump}
       actionIcon={Plus}
-      defaultExpanded
       contentClassName="mx-2"
     >
       {dumps.map(dump => {
