@@ -37,7 +37,6 @@ export const Todos: React.FC = () => {
       });
     } catch (error: any) {
       console.error('Failed to update todo:', error);
-      showNotification('Failed to update todo ' + error, 'error');
     }
   };
 

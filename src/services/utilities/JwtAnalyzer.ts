@@ -1,5 +1,3 @@
-import { showNotification } from '@src/webview/utils/notifications';
-
 /**
  * JWT Analyzer tool
  * Decodes JWT, checks expiry, and shows issued-at time
@@ -33,7 +31,6 @@ export const transform = (input: string): string => {
     }
 
     const [header, payload, signature] = parts;
-    showNotification(`Header: ${header}`, 'info');
 
     const headerJson = JSON.parse(base64UrlDecode(header));
     const payloadJson: JWTPayload = JSON.parse(base64UrlDecode(payload));
