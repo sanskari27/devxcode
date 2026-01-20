@@ -36,7 +36,7 @@ export class RepositoriesService {
     if (!repositories) {
       return [];
     }
-    
+
     // Migrate old repositories that don't have pinned field
     const needsMigration = repositories.some(repo => repo.pinned === undefined);
     if (needsMigration) {
@@ -47,7 +47,7 @@ export class RepositoriesService {
       await this._saveAllRepositoriesData(migratedRepositories);
       return migratedRepositories;
     }
-    
+
     return repositories;
   }
 

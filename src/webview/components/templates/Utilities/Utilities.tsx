@@ -13,8 +13,6 @@ export const Utilities: React.FC = () => {
   return (
     <Section title="Utilities" contentClassName="mx-2">
       {toolGroups.map(group => {
-        const GroupIcon = TOOL_ICONS[group.icon] || TOOL_ICONS.code;
-
         return (
           <Section
             key={group.id}

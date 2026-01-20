@@ -225,7 +225,7 @@ export const ToolEditorManager: React.FC<ToolEditorManagerProps> = ({
           }
           return toolService.transform(input);
 
-        default:
+        default: {
           // Fallback: try to pass parameters in order
           const paramValues = Object.values(params);
           if (paramValues.length === 1) {
@@ -241,6 +241,7 @@ export const ToolEditorManager: React.FC<ToolEditorManagerProps> = ({
             );
           }
           return toolService.transform(input);
+        }
       }
     }
     return input;

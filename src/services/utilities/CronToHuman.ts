@@ -2,8 +2,6 @@
  * Cron expression → human text tool
  * Converts cron expression to human readable
  */
-const cronFields = ['minute', 'hour', 'day', 'month', 'weekday'];
-
 const parseCronField = (field: string, index: number): string => {
   const fieldNames = [
     ['minute', 'minutes'],

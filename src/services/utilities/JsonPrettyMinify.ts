@@ -19,7 +19,7 @@ export const transform = (input: string, isPretty: boolean = true): string => {
 
 export const reverse = (input: string): string => {
   try {
-    const parsed = JSON.parse(input);
+    JSON.parse(input);
     // If input is already minified (no spaces), pretty print it
     // If input is pretty printed, minify it
     const isPretty = input.includes('\n') || input.includes('  ');

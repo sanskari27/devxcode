@@ -5,7 +5,8 @@ import { FolderCode, Pin, PinOff } from 'lucide-react';
 
 export const Repositories: React.FC = () => {
   const [searchValue, setSearchValue] = useState('');
-  const { repositories, openRepository, togglePinRepository } = useRepositoriesService();
+  const { repositories, openRepository, togglePinRepository } =
+    useRepositoriesService();
 
   const filteredRepositories = useMemo(() => {
     return repositories.filter(repository => {
@@ -31,7 +32,7 @@ export const Repositories: React.FC = () => {
       // Pinned repositories come first
       if (a.pinned && !b.pinned) return -1;
       if (!a.pinned && b.pinned) return 1;
-      
+
       // If both have same pin status, sort by lastOpened
       const dateA = new Date(a.lastOpened).getTime();
       const dateB = new Date(b.lastOpened).getTime();

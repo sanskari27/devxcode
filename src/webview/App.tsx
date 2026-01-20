@@ -1,4 +1,3 @@
-import { Section } from '@components/atoms';
 import {
   Dumps,
   GitHubHelpers,

@@ -29,7 +29,6 @@ export const ToolEditor: React.FC<ToolEditorProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [editorHeight, setEditorHeight] = useState(400);
   const editorContainerRef = useRef<HTMLDivElement>(null);
-  const theme = useTheme();
 
   // Get tool configuration for additional inputs
   const toolConfig = TOOL_CONFIGS[toolId];

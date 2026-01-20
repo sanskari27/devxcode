@@ -2,7 +2,6 @@ import { RadioButton, Section } from '@components/atoms';
 import { Alert } from '@components/molecules';
 import { cn } from '@lib/utils';
 import { Todo } from '@services/todos';
-import { showNotification } from '@src/webview/utils/notifications';
 import { Plus, Trash } from 'lucide-react';
 import React, { useMemo } from 'react';
 import { useTodosService } from '../../../hooks/useTodosService';
