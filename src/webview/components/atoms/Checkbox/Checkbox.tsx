@@ -42,7 +42,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({
           'border-2 border-[var(--vscode-input-border)]',
           'bg-[var(--vscode-input-background)]',
           'transition-all',
-          'rounded w-4 h-4',
+          'rounded !w-4 !h-4 flex-shrink-0',
           checked && 'border-[var(--vscode-focusBorder)]',
           'hover:border-[var(--vscode-inputOption-hoverBorder)]'
         )}

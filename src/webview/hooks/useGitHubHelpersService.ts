@@ -53,8 +53,20 @@ export function useGitHubHelpersService() {
     [service]
   );
 
+  /**
+   * Open backmerge webview
+   */
+  const openBackmergeWebview = useCallback((): void => {
+    if (typeof vscode !== 'undefined') {
+      vscode.postMessage({
+        command: 'openBackmergeWebview',
+      });
+    }
+  }, []);
+
   return {
     helpers,
     executeHelper,
+    openBackmergeWebview,
   };
 }

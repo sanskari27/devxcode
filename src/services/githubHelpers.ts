@@ -6,12 +6,13 @@ export interface GitHelper {
   id: string;
   name: string;
   description: string;
-  command: string;
+  command?: string;
   requiresInput: boolean;
   requiresConfirmation?: boolean;
   inputPrompt?: string;
   inputType?: 'number' | 'text';
   inputPlaceholder?: string;
+  opensWebview?: boolean;
 }
 
 /**
@@ -143,6 +144,14 @@ export class GitHubHelpersService {
         command: 'git diff --staged',
         requiresInput: false,
       },
+      // Backmerge
+      {
+        id: 'backmerge',
+        name: 'Backmerge',
+        description: 'Open webview to manage branch merges with source and destination branches',
+        requiresInput: false,
+        opensWebview: true,
+      },
     ];
   }
 
@@ -157,6 +166,10 @@ export class GitHubHelpersService {
    * Build command from helper template with input values
    */
   buildCommand(helper: GitHelper, input?: string): string {
+    if (!helper.command) {
+      throw new Error('Helper does not have a command');
+    }
+
     let command = helper.command;
 
     // Replace placeholders with input values
