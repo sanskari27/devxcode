@@ -1,5 +1,5 @@
-import { DestinationBranchSection, SourceBranchSection } from '@components/organisms';
 import { SelectedCommitsList } from '@components/molecules';
+import { DestinationBranchSection, SourceBranchSection } from '@components/organisms';
 import React from 'react';
 import { useBackmergeService } from '../../../hooks/useBackmergeService';
 
@@ -19,6 +19,8 @@ export const Backmerge: React.FC = () => {
     handleDestinationBranchChange,
     pullSourceBranch,
     pullDestinationBranch,
+    generateBackmergeBranch,
+    backmergeError,
     sourceCommits,
     destinationCommits,
     selectedCommits,
@@ -81,6 +83,22 @@ export const Backmerge: React.FC = () => {
 
           {/* Selected Commits Section - Below Source and Destination */}
           <SelectedCommitsList commits={selectedCommitsList} />
+
+          {/* Generate Backmerge Branch Button */}
+          <div className="flex flex-col items-center pt-4">
+            {backmergeError && (
+              <div className="text-sm mb-2 text-[var(--vscode-errorForeground)] max-w-2xl text-center">
+                {backmergeError}
+              </div>
+            )}
+            <button
+              onClick={generateBackmergeBranch}
+              disabled={!destinationBranch}
+              className="px-6 py-1.5 text-base font-medium bg-[var(--vscode-button-background)] text-[var(--vscode-button-foreground)] rounded hover:bg-[var(--vscode-button-hoverBackground)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--vscode-focusBorder)]"
+            >
+              Generate Backmerge Branch
+            </button>
+          </div>
         </div>
       )}
     </div>

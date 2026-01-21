@@ -40,6 +40,7 @@ export function useBackmergeService() {
     const [destCommitsSkip, setDestCommitsSkip] = useState(0);
     const [hasMoreSourceCommits, setHasMoreSourceCommits] = useState(true);
     const [hasMoreDestCommits, setHasMoreDestCommits] = useState(true);
+    const [backmergeError, setBackmergeError] = useState<string | null>(null);
 
     // Fetch local branches on mount
     useEffect(() => {
@@ -123,6 +124,24 @@ export function useBackmergeService() {
                         setHasMoreDestCommits(commits.length === 10); // If we got 10, there might be more
                         setLoadingDestCommits(false);
                     }
+                    break;
+
+                case 'backmergeBranchCreated':
+                    setBackmergeError(null);
+                    showNotification(
+                        `Successfully created branch: ${message.branchName}`,
+                        'success'
+                    );
+                    // Refresh branches list
+                    if (typeof vscode !== 'undefined') {
+                        vscode.postMessage({
+                            command: 'getLocalBranches',
+                        });
+                    }
+                    break;
+
+                case 'backmergeBranchError':
+                    setBackmergeError(message.message || 'An error occurred during backmerge');
                     break;
 
                 case 'error':
@@ -293,6 +312,28 @@ export function useBackmergeService() {
         }
     }, [destinationBranch]);
 
+    // Generate backmerge branch
+    const generateBackmergeBranch = useCallback(() => {
+        if (!destinationBranch) {
+            showNotification('Please select a destination branch', 'error');
+            return;
+        }
+
+        // Clear any previous error
+        setBackmergeError(null);
+
+        // Get selected commit IDs
+        const selectedCommitIds = Array.from(selectedCommits);
+
+        if (typeof vscode !== 'undefined') {
+            vscode.postMessage({
+                command: 'createBackmergeBranch',
+                destinationBranch,
+                selectedCommits: selectedCommitIds,
+            });
+        }
+    }, [destinationBranch, selectedCommits]);
+
     // Get selected commits sorted by dateTime ascending
     const selectedCommitsList = Array.from(selectedCommits)
         .map(id => sourceCommits.find(c => c.id === id))
@@ -326,6 +367,8 @@ export function useBackmergeService() {
         handleDestinationBranchChange,
         pullSourceBranch,
         pullDestinationBranch,
+        generateBackmergeBranch,
+        backmergeError,
         // Commit-related exports
         sourceCommits,
         destinationCommits,

@@ -282,3 +282,184 @@ function formatDateParts(date: Date): string {
 
     return `${day}/${month}/${year} ${hoursStr}:${minutes}:${seconds} ${ampm}`;
 }
+
+/**
+ * Check if a branch exists (local or remote)
+ */
+async function branchExists(workspacePath: string, branchName: string): Promise<boolean> {
+    return new Promise((resolve) => {
+        // Check local branches first
+        child_process.exec(
+            `git show-ref --verify --quiet refs/heads/${branchName}`,
+            { cwd: workspacePath },
+            (localError) => {
+                if (!localError) {
+                    // Branch exists locally
+                    resolve(true);
+                    return;
+                }
+                // Check remote branches
+                child_process.exec(
+                    `git show-ref --verify --quiet refs/remotes/origin/${branchName}`,
+                    { cwd: workspacePath },
+                    (remoteError) => {
+                        // If no error, branch exists remotely
+                        resolve(!remoteError);
+                    }
+                );
+            }
+        );
+    });
+}
+
+/**
+ * Create a backmerge branch from destination branch
+ * Branch name format: backmerge/DD-MM-YYYY
+ * If branch exists, tries backmerge/DD-MM-YYYY-1, backmerge/DD-MM-YYYY-2, etc.
+ */
+export async function createBackmergeBranch(
+    workspacePath: string,
+    destinationBranch: string
+): Promise<string> {
+    return new Promise(async (resolve, reject) => {
+        if (!destinationBranch) {
+            reject(new Error('Destination branch is required'));
+            return;
+        }
+
+        // Generate base branch name with current date: backmerge/DD-MM-YYYY
+        const now = new Date();
+        const day = String(now.getDate()).padStart(2, '0');
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const year = now.getFullYear();
+        const baseBranchName = `backmerge/${day}-${month}-${year}`;
+
+        // Find available branch name
+        let branchName = baseBranchName;
+        let counter = 0;
+        while (await branchExists(workspacePath, branchName)) {
+            counter++;
+            branchName = `${baseBranchName}-${counter}`;
+        }
+
+        // Create the branch from destination branch
+        child_process.exec(
+            `git branch ${branchName} ${destinationBranch}`,
+            { cwd: workspacePath },
+            (error, stdout, stderr) => {
+                if (error) {
+                    reject(new Error(`Failed to create branch: ${error.message}`));
+                    return;
+                }
+                if (stderr && !stderr.includes('Switched to')) {
+                    // Some git output goes to stderr but is not an error
+                    console.warn('Git stderr:', stderr);
+                }
+                resolve(branchName);
+            }
+        );
+    });
+}
+
+/**
+ * Cherry-pick a commit onto a branch
+ */
+export async function cherryPickCommit(
+    workspacePath: string,
+    branchName: string,
+    commitId: string
+): Promise<void> {
+    return new Promise((resolve, reject) => {
+        // First checkout the branch, then cherry-pick
+        child_process.exec(
+            `git checkout ${branchName} && git cherry-pick ${commitId}`,
+            { cwd: workspacePath },
+            (error, stdout, stderr) => {
+                if (error) {
+                    // If cherry-pick fails, we might be in a conflicted state
+                    // Try to abort the cherry-pick
+                    child_process.exec(
+                        `git cherry-pick --abort`,
+                        { cwd: workspacePath },
+                        () => {
+                            // Ignore abort errors, just reject with original error
+                            reject(new Error(`Failed to cherry-pick commit ${commitId}: ${error.message}`));
+                        }
+                    );
+                    return;
+                }
+                if (stderr && !stderr.includes('Updating') && !stderr.includes('Fast-forward')) {
+                    // Some git output goes to stderr but is not an error
+                    console.warn('Git stderr:', stderr);
+                }
+                resolve();
+            }
+        );
+    });
+}
+
+/**
+ * Delete a local branch
+ * If we're currently on the branch, checkout another branch first
+ */
+export async function deleteBranch(
+    workspacePath: string,
+    branchName: string,
+    checkoutBranch?: string
+): Promise<void> {
+    return new Promise((resolve, reject) => {
+        // First, check if we're on the branch we want to delete
+        child_process.exec(
+            `git rev-parse --abbrev-ref HEAD`,
+            { cwd: workspacePath },
+            (headError, headStdout) => {
+                const currentBranch = headStdout.trim();
+                const needCheckout = currentBranch === branchName;
+
+                if (needCheckout && checkoutBranch) {
+                    // Checkout another branch first
+                    child_process.exec(
+                        `git checkout ${checkoutBranch}`,
+                        { cwd: workspacePath },
+                        (checkoutError) => {
+                            if (checkoutError) {
+                                reject(new Error(`Failed to checkout ${checkoutBranch} before deleting branch: ${checkoutError.message}`));
+                                return;
+                            }
+                            // Now delete the branch
+                            deleteBranchInternal(workspacePath, branchName, resolve, reject);
+                        }
+                    );
+                } else if (needCheckout && !checkoutBranch) {
+                    reject(new Error(`Cannot delete branch ${branchName} because it is currently checked out. Please provide a branch to checkout first.`));
+                } else {
+                    // Not on the branch, safe to delete
+                    deleteBranchInternal(workspacePath, branchName, resolve, reject);
+                }
+            }
+        );
+    });
+}
+
+function deleteBranchInternal(
+    workspacePath: string,
+    branchName: string,
+    resolve: () => void,
+    reject: (error: Error) => void
+): void {
+    // Force delete the branch
+    child_process.exec(
+        `git branch -D ${branchName}`,
+        { cwd: workspacePath },
+        (error, stdout, stderr) => {
+            if (error) {
+                reject(new Error(`Failed to delete branch: ${error.message}`));
+                return;
+            }
+            if (stderr) {
+                console.warn('Git stderr:', stderr);
+            }
+            resolve();
+        }
+    );
+}

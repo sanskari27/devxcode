@@ -1,6 +1,9 @@
 import * as vscode from 'vscode';
 import {
   checkBranchStatus,
+  cherryPickCommit,
+  createBackmergeBranch,
+  deleteBranch,
   getBranchCommits,
   getLocalBranches,
   pullBranch,
@@ -200,6 +203,73 @@ export async function handleOpenBackmergeWebviewMessage(
                   panel.webview.postMessage({
                     command: 'error',
                     message: error.message || 'Failed to get branch commits',
+                  });
+                }
+                break;
+              }
+
+              case 'createBackmergeBranch': {
+                if (!msg.destinationBranch || typeof msg.destinationBranch !== 'string') {
+                  panel.webview.postMessage({
+                    command: 'error',
+                    message: 'Destination branch is required',
+                  });
+                  return;
+                }
+                
+                const selectedCommits = Array.isArray(msg.selectedCommits) 
+                  ? msg.selectedCommits.filter((id): id is string => typeof id === 'string')
+                  : [];
+                
+                let newBranchName: string | null = null;
+                
+                try {
+                  // Create the branch
+                  newBranchName = await createBackmergeBranch(
+                    workspacePath,
+                    msg.destinationBranch as string
+                  );
+                  
+                  // If there are selected commits, cherry-pick them in order
+                  if (selectedCommits.length > 0) {
+                    for (const commitId of selectedCommits) {
+                      try {
+                        await cherryPickCommit(workspacePath, newBranchName, commitId);
+                      } catch (cherryPickError: any) {
+                        // If cherry-pick fails, delete the branch and stop
+                        // Checkout destination branch first if we're on the new branch
+                        try {
+                          await deleteBranch(workspacePath, newBranchName, msg.destinationBranch as string);
+                        } catch (deleteError) {
+                          // Log but don't fail on delete error
+                          console.error('Failed to delete branch after cherry-pick error:', deleteError);
+                        }
+                        panel.webview.postMessage({
+                          command: 'backmergeBranchError',
+                          message: `Failed to cherry-pick commit ${commitId}: ${cherryPickError.message}. Branch ${newBranchName} has been deleted.`,
+                        });
+                        return;
+                      }
+                    }
+                  }
+                  
+                  // Success - all commits cherry-picked (or no commits to cherry-pick)
+                  panel.webview.postMessage({
+                    command: 'backmergeBranchCreated',
+                    branchName: newBranchName,
+                  });
+                } catch (error: any) {
+                  // If branch creation failed, try to clean up if branch was created
+                  if (newBranchName) {
+                    try {
+                      await deleteBranch(workspacePath, newBranchName, msg.destinationBranch as string);
+                    } catch (deleteError) {
+                      console.error('Failed to delete branch after creation error:', deleteError);
+                    }
+                  }
+                  panel.webview.postMessage({
+                    command: 'error',
+                    message: error.message || 'Failed to create backmerge branch',
                   });
                 }
                 break;
