@@ -37,7 +37,7 @@
                 {
                     "id": "devxcode",
                     "title": "DevXCode",
-                    "icon": "$(code)"
+                    "icon": "$(tools)"
                 }
             ]
         }
