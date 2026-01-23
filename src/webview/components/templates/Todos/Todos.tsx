@@ -2,7 +2,7 @@ import { RadioButton, Section } from '@components/atoms';
 import { Alert } from '@components/molecules';
 import { cn } from '@lib/utils';
 import { Todo } from '@services/todos';
-import { Plus, Trash } from 'lucide-react';
+import { Eraser, Plus, Trash } from 'lucide-react';
 import React, { useMemo } from 'react';
 import { useTodosService } from '../../../hooks/useTodosService';
 
@@ -57,6 +57,27 @@ export const Todos: React.FC = () => {
     });
   }, [groupedTodos]);
 
+  const handleClearAllCompleted = () => {
+    Alert.title('Clear All Completed Todos')
+      .description(
+        `Are you sure you want to delete all ${sortedCompletedTodos.length} completed todo(s)? This action cannot be undone.`
+      )
+      .addButton('primary', 'Clear All', async () => {
+        try {
+          // Delete all completed todos
+          await Promise.all(
+            sortedCompletedTodos.map(todo => deleteTodo(todo.id))
+          );
+        } catch (error: any) {
+          console.error('Failed to clear completed todos:', error);
+        }
+      })
+      .addButton('secondary', 'Cancel', () => {
+        console.log('Cancelled clearing completed todos');
+      })
+      .show();
+  };
+
   const sortedNotCompletedTodos = useMemo(() => {
     return groupedTodos.notCompleted.sort((a, b) => {
       const dateA = new Date(a.createdAt).getTime();
@@ -82,7 +103,12 @@ export const Todos: React.FC = () => {
         />
       ))}
       {sortedCompletedTodos.length > 0 && (
-        <Section title="Completed" contentClassName="ml-2">
+        <Section
+          title="Completed"
+          contentClassName="mx-2"
+          action={handleClearAllCompleted}
+          actionIcon={Eraser}
+        >
           {sortedCompletedTodos.map(todo => (
             <div key={todo.id} className="flex items-center gap-2">
               <RadioButton
