@@ -53,7 +53,7 @@ export const Repositories: React.FC = () => {
       title="Repositories"
       count={filteredRepositories.length}
       defaultExpanded
-      contentClassName="mx-2"
+      contentClassName="ml-2"
     >
       <SearchBar
         placeholder="Search repositories"

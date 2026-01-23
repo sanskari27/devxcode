@@ -38,12 +38,12 @@ export const Dumps: React.FC = () => {
       title="Dumps"
       action={handleAddDump}
       actionIcon={Plus}
-      contentClassName="mx-2"
+      contentClassName="ml-2"
     >
       {dumps.map(dump => {
         const dumpPreview = dump.content
           ? dump.content.substring(0, 100) +
-            (dump.content.length > 100 ? '...' : '')
+          (dump.content.length > 100 ? '...' : '')
           : `New dump (${dump.id})`;
         return (
           <SectionItem

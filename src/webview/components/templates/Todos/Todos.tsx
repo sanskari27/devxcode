@@ -71,7 +71,7 @@ export const Todos: React.FC = () => {
       action={handleAddTodo}
       actionIcon={Plus}
       defaultExpanded
-      contentClassName="mx-2"
+      contentClassName="ml-2"
     >
       {sortedNotCompletedTodos.map(todo => (
         <RadioButton
@@ -82,7 +82,7 @@ export const Todos: React.FC = () => {
         />
       ))}
       {sortedCompletedTodos.length > 0 && (
-        <Section title="Completed" contentClassName="mx-2">
+        <Section title="Completed" contentClassName="ml-2">
           {sortedCompletedTodos.map(todo => (
             <div key={todo.id} className="flex items-center gap-2">
               <RadioButton

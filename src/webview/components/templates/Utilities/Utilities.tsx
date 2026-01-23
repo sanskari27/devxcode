@@ -11,13 +11,13 @@ export const Utilities: React.FC = () => {
   };
 
   return (
-    <Section title="Utilities" contentClassName="mx-2">
+    <Section title="Utilities" contentClassName="ml-2">
       {toolGroups.map(group => {
         return (
           <Section
             key={group.id}
             title={group.name}
-            contentClassName="mx-2"
+            contentClassName="ml-2"
             defaultExpanded={false}
           >
             {group.tools.map(tool => {

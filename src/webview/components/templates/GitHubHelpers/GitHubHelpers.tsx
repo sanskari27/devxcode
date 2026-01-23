@@ -99,7 +99,7 @@ export const GitHubHelpers: React.FC = () => {
   };
 
   return (
-    <Section title="Git Helpers" contentClassName="mx-2">
+    <Section title="Git Helpers" contentClassName="ml-2">
       {helpers.map(helper => (
         <SectionItem
           key={helper.id}
