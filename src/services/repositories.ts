@@ -1,6 +1,8 @@
 import {
-  STORAGE_KEYS,
   REPOSITORY_NAME_DENORMALIZE_REGEX,
+  REPOSITORY_NAME_REMOVE_ACRONYMS,
+  REPOSITORY_NAME_REMOVE_PATTERNS,
+  STORAGE_KEYS,
 } from '../lib/constants';
 import { StorageService } from './storage';
 
@@ -23,7 +25,7 @@ export interface Repository {
 export class RepositoriesService {
   private readonly STORAGE_KEY = STORAGE_KEYS.REPOSITORIES;
 
-  constructor(private storage: StorageService) {}
+  constructor(private storage: StorageService) { }
 
   /**
    * Get all repositories from storage
@@ -62,10 +64,30 @@ export class RepositoriesService {
 
   /**
    * Denormalize repository name by removing special characters
-   * Removes -, _, . and other special characters to generate a clean nickname
+   * Removes alphanumeric codes, hardcoded acronyms, and special characters to generate a clean nickname
    */
+
   denormalizeName(name: string): string {
-    return name.replace(REPOSITORY_NAME_DENORMALIZE_REGEX, ' ');
+    let result = name;
+
+    result = result.replace(REPOSITORY_NAME_DENORMALIZE_REGEX, ' ');
+
+    const prefixPattern = REPOSITORY_NAME_REMOVE_PATTERNS.map(prefix =>
+      prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') // Escape special regex characters
+    ).join('|');
+    const codeRegex = new RegExp(`\\b(${prefixPattern})\\d+(?=[-_.]|\\b|$)`, 'gi');
+    result = result.replace(codeRegex, '');
+
+    for (const acronym of REPOSITORY_NAME_REMOVE_ACRONYMS) {
+      const acronymRegex = new RegExp(`\\b${acronym}\\b`, 'gi');
+      result = result.replace(acronymRegex, '');
+    }
+
+    result = result.replace(REPOSITORY_NAME_DENORMALIZE_REGEX, ' ');
+
+    result = result.replace(/\s+/g, ' ').trim();
+
+    return result;
   }
 
   /**

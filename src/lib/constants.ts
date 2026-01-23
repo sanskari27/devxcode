@@ -14,8 +14,6 @@ export const STORAGE_KEYS = {
   DUMPS: 'devxcode.dumps',
 } as const;
 
-/**
- * Regex pattern for denormalizing repository names
- * Removes special characters like -, _, . to generate clean nicknames
- */
 export const REPOSITORY_NAME_DENORMALIZE_REGEX = /[-_.]/g;
+export const REPOSITORY_NAME_REMOVE_PATTERNS = ['TSWM', 'TAPP'] as const;
+export const REPOSITORY_NAME_REMOVE_ACRONYMS = ['WPFH', 'GPS', 'FAS'] as const;
