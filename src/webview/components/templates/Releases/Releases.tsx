@@ -6,8 +6,10 @@ import { format } from 'date-fns';
 import { Plus, Trash } from 'lucide-react';
 import React, { useMemo } from 'react';
 import { useReleasesService } from '../../../hooks/useReleasesService';
+import { useSettingsService } from '../../../hooks/useSettingsService';
 
-const RELEASE_STATUSES: ReleaseStatus[] = [
+// Default release statuses fallback (used when settings are loading)
+const DEFAULT_RELEASE_STATUSES: ReleaseStatus[] = [
   'Handover Completed',
   'Support Stamping',
   'Security Stamping',
@@ -23,6 +25,17 @@ export const Releases: React.FC = () => {
     getChangeProgress,
     getReleaseProgressSync,
   } = useReleasesService();
+
+  const { releaseStatuses, isLoading: isLoadingSettings } =
+    useSettingsService();
+
+  // Use settings if available, otherwise fallback to defaults
+  const RELEASE_STATUSES = useMemo(() => {
+    if (isLoadingSettings || releaseStatuses.length === 0) {
+      return DEFAULT_RELEASE_STATUSES;
+    }
+    return releaseStatuses;
+  }, [releaseStatuses, isLoadingSettings]);
 
   const handleAddRelease = () => {
     Alert.title('Add New Release')

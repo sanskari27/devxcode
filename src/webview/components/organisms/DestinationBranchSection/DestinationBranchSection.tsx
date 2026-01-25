@@ -1,4 +1,8 @@
-import { BranchSelector, BranchStatusIndicator, CommitList } from '@components/molecules';
+import {
+  BranchSelector,
+  BranchStatusIndicator,
+  CommitList,
+} from '@components/molecules';
 import React from 'react';
 import type { BranchStatus } from '@components/molecules/BranchStatusIndicator';
 import type { Commit } from '@components/molecules/CommitList';
@@ -18,7 +22,9 @@ export interface DestinationBranchSectionProps {
   onLoadMore: () => void;
 }
 
-export const DestinationBranchSection: React.FC<DestinationBranchSectionProps> = ({
+export const DestinationBranchSection: React.FC<
+  DestinationBranchSectionProps
+> = ({
   branches,
   selectedBranch,
   status,

@@ -25,7 +25,7 @@ export interface Repository {
 export class RepositoriesService {
   private readonly STORAGE_KEY = STORAGE_KEYS.REPOSITORIES;
 
-  constructor(private storage: StorageService) { }
+  constructor(private storage: StorageService) {}
 
   /**
    * Get all repositories from storage
@@ -72,10 +72,13 @@ export class RepositoriesService {
 
     result = result.replace(REPOSITORY_NAME_DENORMALIZE_REGEX, ' ');
 
-    const prefixPattern = REPOSITORY_NAME_REMOVE_PATTERNS.map(prefix =>
-      prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') // Escape special regex characters
+    const prefixPattern = REPOSITORY_NAME_REMOVE_PATTERNS.map(
+      prefix => prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') // Escape special regex characters
     ).join('|');
-    const codeRegex = new RegExp(`\\b(${prefixPattern})\\d+(?=[-_.]|\\b|$)`, 'gi');
+    const codeRegex = new RegExp(
+      `\\b(${prefixPattern})\\d+(?=[-_.]|\\b|$)`,
+      'gi'
+    );
     result = result.replace(codeRegex, '');
 
     for (const acronym of REPOSITORY_NAME_REMOVE_ACRONYMS) {

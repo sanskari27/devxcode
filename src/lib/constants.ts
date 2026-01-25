@@ -12,6 +12,7 @@ export const STORAGE_KEYS = {
   TODOS: 'devxcode.todos',
   REPOSITORIES: 'devxcode.repositories',
   DUMPS: 'devxcode.dumps',
+  SETTINGS: 'devxcode.settings',
 } as const;
 
 export const REPOSITORY_NAME_DENORMALIZE_REGEX = /[-_.]/g;

@@ -148,7 +148,8 @@ export class GitHubHelpersService {
       {
         id: 'backmerge',
         name: 'Backmerge',
-        description: 'Open webview to manage branch merges with source and destination branches',
+        description:
+          'Open webview to manage branch merges with source and destination branches',
         requiresInput: false,
         opensWebview: true,
       },

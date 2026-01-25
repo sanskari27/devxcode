@@ -43,7 +43,7 @@ export const Dumps: React.FC = () => {
       {dumps.map(dump => {
         const dumpPreview = dump.content
           ? dump.content.substring(0, 100) +
-          (dump.content.length > 100 ? '...' : '')
+            (dump.content.length > 100 ? '...' : '')
           : `New dump (${dump.id})`;
         return (
           <SectionItem

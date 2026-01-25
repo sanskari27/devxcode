@@ -81,4 +81,4 @@ export function activate(context: vscode.ExtensionContext) {
 /**
  * Deactivates the extension
  */
-export function deactivate() { }
+export function deactivate() {}

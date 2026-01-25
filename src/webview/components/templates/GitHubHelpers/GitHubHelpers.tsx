@@ -6,7 +6,8 @@ import React from 'react';
 import { useGitHubHelpersService } from '../../../hooks/useGitHubHelpersService';
 
 export const GitHubHelpers: React.FC = () => {
-  const { helpers, executeHelper, openBackmergeWebview } = useGitHubHelpersService();
+  const { helpers, executeHelper, openBackmergeWebview } =
+    useGitHubHelpersService();
 
   const handleHelperClick = (helperId: string) => {
     const helper = helpers.find(h => h.id === helperId);
@@ -26,7 +27,7 @@ export const GitHubHelpers: React.FC = () => {
       Alert.title(helper.name)
         .description(
           helper.description +
-          '\n\nThis action cannot be undone. Are you sure you want to continue?'
+            '\n\nThis action cannot be undone. Are you sure you want to continue?'
         )
         .addButton('primary', 'Execute', () => {
           // After confirmation, proceed with input or execution

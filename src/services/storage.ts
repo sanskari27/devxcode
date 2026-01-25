@@ -9,8 +9,7 @@ export class StorageService {
   constructor(
     private workspaceState: Memento,
     private globalState: Memento
-  ) { }
-
+  ) {}
 
   private getKey(key: string): string {
     return `devxcode.${key}`;

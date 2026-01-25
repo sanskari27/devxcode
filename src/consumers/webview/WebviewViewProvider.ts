@@ -22,7 +22,7 @@ export class WebviewViewProvider implements vscode.WebviewViewProvider {
     private readonly _context: vscode.ExtensionContext,
     private readonly _repositoriesService: RepositoriesService,
     private readonly _dumpsService: DumpsService
-  ) { }
+  ) {}
 
   public resolveWebviewView(
     webviewView: vscode.WebviewView,

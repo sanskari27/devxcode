@@ -9,7 +9,10 @@ export const SelectedCommitsList: React.FC<SelectedCommitsListProps> = ({
   commits,
 }) => {
   return (
-    <div className="flex flex-col gap-2 border-t border-[var(--vscode-panel-border)] pt-4" style={{ maxHeight: '40%' }}>
+    <div
+      className="flex flex-col gap-2 border-t border-[var(--vscode-panel-border)] pt-4"
+      style={{ maxHeight: '40%' }}
+    >
       <h3 className="text-sm font-medium text-[var(--vscode-foreground)]">
         Selected Commits ({commits.length})
       </h3>

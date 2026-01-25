@@ -3,6 +3,7 @@ import {
   GitHubHelpers,
   Releases,
   Repositories,
+  Settings,
   Todos,
   Utilities,
 } from '@components/templates';
@@ -20,6 +21,7 @@ const App: React.FC = () => {
       <Utilities />
       <Releases />
       <Dumps />
+      <Settings />
     </div>
   );
 };

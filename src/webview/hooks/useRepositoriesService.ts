@@ -123,18 +123,15 @@ export function useRepositoriesService() {
     [service]
   );
 
-  const openGitHubRepository = useCallback(
-    (path: string): void => {
-      // Send message to extension to open GitHub repository
-      if (typeof vscode !== 'undefined') {
-        vscode.postMessage({
-          command: 'openGitHubRepository',
-          path,
-        });
-      }
-    },
-    []
-  );
+  const openGitHubRepository = useCallback((path: string): void => {
+    // Send message to extension to open GitHub repository
+    if (typeof vscode !== 'undefined') {
+      vscode.postMessage({
+        command: 'openGitHubRepository',
+        path,
+      });
+    }
+  }, []);
 
   return {
     repositories,

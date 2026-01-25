@@ -1,5 +1,8 @@
 import { SelectedCommitsList } from '@components/molecules';
-import { DestinationBranchSection, SourceBranchSection } from '@components/organisms';
+import {
+  DestinationBranchSection,
+  SourceBranchSection,
+} from '@components/organisms';
 import React from 'react';
 import { useBackmergeService } from '../../../hooks/useBackmergeService';
 
@@ -42,7 +45,9 @@ export const Backmerge: React.FC = () => {
 
       {loadingBranches ? (
         <div className="flex items-center justify-center h-full">
-          <div className="text-[var(--vscode-foreground)]">Loading branches...</div>
+          <div className="text-[var(--vscode-foreground)]">
+            Loading branches...
+          </div>
         </div>
       ) : (
         <div className="flex flex-col gap-6 h-full overflow-hidden">
