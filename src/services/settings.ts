@@ -1,6 +1,30 @@
-import { STORAGE_KEYS } from '../lib/constants';
+import {
+  REPOSITORY_NAME_DENORMALIZE_REGEX,
+  REPOSITORY_NAME_REMOVE_ACRONYMS,
+  REPOSITORY_NAME_REMOVE_PATTERNS,
+  STORAGE_KEYS,
+} from '../lib/constants';
 import type { ReleaseStatus } from './releases';
 import { StorageService } from './storage';
+
+/**
+ * Repository denormalization strategy
+ */
+export type RepositoryDenormalizationStrategy =
+  | 'none'
+  | 'basic'
+  | 'aggressive'
+  | 'custom';
+
+/**
+ * Repository denormalization configuration
+ */
+export interface RepositoryDenormalizationConfig {
+  strategy: RepositoryDenormalizationStrategy;
+  customRegex?: string;
+  removePatterns: string[];
+  removeAcronyms: string[];
+}
 
 /**
  * Settings interface
@@ -8,6 +32,7 @@ import { StorageService } from './storage';
  */
 export interface Settings {
   releaseStatuses: ReleaseStatus[];
+  repositoryDenormalization: RepositoryDenormalizationConfig;
 }
 
 /**
@@ -19,6 +44,12 @@ const DEFAULT_SETTINGS: Settings = {
     'Support Stamping',
     'Security Stamping',
   ],
+  repositoryDenormalization: {
+    strategy: 'aggressive',
+    customRegex: REPOSITORY_NAME_DENORMALIZE_REGEX.source,
+    removePatterns: [...REPOSITORY_NAME_REMOVE_PATTERNS],
+    removeAcronyms: [...REPOSITORY_NAME_REMOVE_ACRONYMS],
+  },
 };
 
 /**
@@ -32,10 +63,25 @@ export class SettingsService {
 
   /**
    * Get settings from storage, or return defaults if not found
+   * Migrates old settings that don't have repositoryDenormalization
    */
   async getSettings(): Promise<Settings> {
     const settings = await this.storage.getValue<Settings>(this.STORAGE_KEY);
-    return settings ?? DEFAULT_SETTINGS;
+    if (!settings) {
+      return DEFAULT_SETTINGS;
+    }
+
+    // Migrate old settings that don't have repositoryDenormalization
+    if (!settings.repositoryDenormalization) {
+      const migratedSettings: Settings = {
+        ...settings,
+        repositoryDenormalization: DEFAULT_SETTINGS.repositoryDenormalization,
+      };
+      await this.storage.setValue(this.STORAGE_KEY, migratedSettings);
+      return migratedSettings;
+    }
+
+    return settings;
   }
 
   /**
@@ -46,6 +92,23 @@ export class SettingsService {
     const updatedSettings: Settings = {
       ...currentSettings,
       releaseStatuses: statuses,
+    };
+    await this.storage.setValue(this.STORAGE_KEY, updatedSettings);
+  }
+
+  /**
+   * Update repository denormalization configuration
+   */
+  async updateRepositoryDenormalization(
+    config: Partial<RepositoryDenormalizationConfig>
+  ): Promise<void> {
+    const currentSettings = await this.getSettings();
+    const updatedSettings: Settings = {
+      ...currentSettings,
+      repositoryDenormalization: {
+        ...currentSettings.repositoryDenormalization,
+        ...config,
+      },
     };
     await this.storage.setValue(this.STORAGE_KEY, updatedSettings);
   }

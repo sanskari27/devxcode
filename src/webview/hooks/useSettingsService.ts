@@ -1,5 +1,9 @@
 import { STORAGE_KEYS } from '@lib/constants';
-import type { ReleaseStatus, Settings } from '@services/settings';
+import type {
+  ReleaseStatus,
+  RepositoryDenormalizationConfig,
+  Settings,
+} from '@services/settings';
 import { SettingsService } from '@services/settings';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { WebviewStorageAdapter } from '../services/WebviewStorageAdapter';
@@ -87,6 +91,16 @@ export function useSettingsService() {
     [service]
   );
 
+  const updateRepositoryDenormalization = useCallback(
+    async (config: Partial<RepositoryDenormalizationConfig>): Promise<void> => {
+      await service.updateRepositoryDenormalization(config);
+      // Refresh settings from service
+      const allSettings = await service.getSettings();
+      setSettings(allSettings);
+    },
+    [service]
+  );
+
   const updateSettings = useCallback(
     async (newSettings: Partial<Settings>): Promise<void> => {
       await service.updateSettings(newSettings);
@@ -100,9 +114,17 @@ export function useSettingsService() {
   return {
     settings,
     releaseStatuses: settings?.releaseStatuses ?? [],
+    repositoryDenormalization:
+      settings?.repositoryDenormalization ??
+      ({
+        strategy: 'aggressive',
+        removePatterns: [],
+        removeAcronyms: [],
+      } as RepositoryDenormalizationConfig),
     isLoading,
     getSettings,
     updateReleaseStatuses,
+    updateRepositoryDenormalization,
     updateSettings,
   };
 }

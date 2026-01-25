@@ -1,6 +1,7 @@
 import { STORAGE_KEYS } from '@lib/constants';
 import type { Repository } from '@services/repositories';
 import { RepositoriesService } from '@services/repositories';
+import { SettingsService } from '@services/settings';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { WebviewStorageAdapter } from '../services/WebviewStorageAdapter';
 
@@ -19,7 +20,11 @@ export function useRepositoriesService() {
   // Create adapter and service instances (memoized to avoid recreating)
   const { adapter, service } = useMemo(() => {
     const storageAdapter = new WebviewStorageAdapter();
-    const repositoriesService = new RepositoriesService(storageAdapter as any);
+    const settingsService = new SettingsService(storageAdapter as any);
+    const repositoriesService = new RepositoriesService(
+      storageAdapter as any,
+      settingsService
+    );
     return {
       adapter: storageAdapter,
       service: repositoriesService,

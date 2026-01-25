@@ -1,9 +1,9 @@
 import {
   REPOSITORY_NAME_DENORMALIZE_REGEX,
-  REPOSITORY_NAME_REMOVE_ACRONYMS,
-  REPOSITORY_NAME_REMOVE_PATTERNS,
   STORAGE_KEYS,
 } from '../lib/constants';
+import type { RepositoryDenormalizationConfig } from './settings';
+import { SettingsService } from './settings';
 import { StorageService } from './storage';
 
 /**
@@ -25,7 +25,10 @@ export interface Repository {
 export class RepositoriesService {
   private readonly STORAGE_KEY = STORAGE_KEYS.REPOSITORIES;
 
-  constructor(private storage: StorageService) {}
+  constructor(
+    private storage: StorageService,
+    private settingsService?: SettingsService
+  ) {}
 
   /**
    * Get all repositories from storage
@@ -65,29 +68,94 @@ export class RepositoriesService {
   /**
    * Denormalize repository name by removing special characters
    * Removes alphanumeric codes, hardcoded acronyms, and special characters to generate a clean nickname
+   * Uses settings if available, otherwise falls back to defaults
    */
-
-  denormalizeName(name: string): string {
-    let result = name;
-
-    result = result.replace(REPOSITORY_NAME_DENORMALIZE_REGEX, ' ');
-
-    const prefixPattern = REPOSITORY_NAME_REMOVE_PATTERNS.map(
-      prefix => prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') // Escape special regex characters
-    ).join('|');
-    const codeRegex = new RegExp(
-      `\\b(${prefixPattern})\\d+(?=[-_.]|\\b|$)`,
-      'gi'
-    );
-    result = result.replace(codeRegex, '');
-
-    for (const acronym of REPOSITORY_NAME_REMOVE_ACRONYMS) {
-      const acronymRegex = new RegExp(`\\b${acronym}\\b`, 'gi');
-      result = result.replace(acronymRegex, '');
+  async denormalizeName(
+    name: string,
+    config?: RepositoryDenormalizationConfig
+  ): Promise<string> {
+    // Get config from parameter, settings service, or defaults
+    let denormalizationConfig: RepositoryDenormalizationConfig;
+    if (config) {
+      denormalizationConfig = config;
+    } else if (this.settingsService) {
+      const settings = await this.settingsService.getSettings();
+      denormalizationConfig = settings.repositoryDenormalization;
+    } else {
+      // Fallback to defaults (aggressive strategy)
+      denormalizationConfig = {
+        strategy: 'aggressive',
+        customRegex: REPOSITORY_NAME_DENORMALIZE_REGEX.source,
+        removePatterns: [],
+        removeAcronyms: [],
+      };
     }
 
-    result = result.replace(REPOSITORY_NAME_DENORMALIZE_REGEX, ' ');
+    return this._denormalizeNameWithConfig(name, denormalizationConfig);
+  }
 
+  /**
+   * Internal method to denormalize name with a specific config
+   */
+  private _denormalizeNameWithConfig(
+    name: string,
+    config: RepositoryDenormalizationConfig
+  ): string {
+    const { strategy, customRegex, removePatterns, removeAcronyms } = config;
+
+    // Strategy: none - return as-is
+    if (strategy === 'none') {
+      return name;
+    }
+
+    let result = name;
+    let regex: RegExp;
+
+    // Determine regex based on strategy
+    if (strategy === 'custom' && customRegex) {
+      try {
+        regex = new RegExp(customRegex, 'g');
+      } catch (error) {
+        // If invalid regex, fall back to default
+        console.error('Invalid custom regex, using default:', error);
+        regex = REPOSITORY_NAME_DENORMALIZE_REGEX;
+      }
+    } else {
+      regex = REPOSITORY_NAME_DENORMALIZE_REGEX;
+    }
+
+    // Strategy: basic - only replace special characters
+    if (strategy === 'basic') {
+      result = result.replace(regex, ' ');
+      result = result.replace(/\s+/g, ' ').trim();
+      return result;
+    }
+
+    // Strategy: aggressive or custom - full denormalization
+    result = result.replace(regex, ' ');
+
+    // Remove patterns (e.g., "TSWM123", "TAPP456")
+    if (removePatterns.length > 0) {
+      const prefixPattern = removePatterns
+        .map(prefix => prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')) // Escape special regex characters
+        .join('|');
+      const codeRegex = new RegExp(
+        `\\b(${prefixPattern})\\d+(?=[-_.]|\\b|$)`,
+        'gi'
+      );
+      result = result.replace(codeRegex, '');
+    }
+
+    // Remove acronyms
+    if (removeAcronyms.length > 0) {
+      for (const acronym of removeAcronyms) {
+        const acronymRegex = new RegExp(`\\b${acronym}\\b`, 'gi');
+        result = result.replace(acronymRegex, '');
+      }
+    }
+
+    // Replace special characters again and clean up whitespace
+    result = result.replace(regex, ' ');
     result = result.replace(/\s+/g, ' ').trim();
 
     return result;
@@ -122,7 +190,7 @@ export class RepositoriesService {
       return this.updateLastOpened(path);
     }
 
-    const nickname = this.denormalizeName(name);
+    const nickname = await this.denormalizeName(name);
     const newRepository: Repository = {
       name,
       path,

@@ -2,6 +2,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { DumpsService } from '../services/dumps';
 import { RepositoriesService } from '../services/repositories';
+import { SettingsService } from '../services/settings';
 import { StorageService } from '../services/storage';
 import { WebviewPanel } from './webview/WebviewPanel';
 import { WebviewViewProvider } from './webview/WebviewViewProvider';
@@ -16,8 +17,11 @@ export function activate(context: vscode.ExtensionContext) {
     context.globalState
   );
 
+  // Initialize settings service
+  const settingsService = new SettingsService(storage);
+
   // Initialize repositories service
-  const repositoriesService = new RepositoriesService(storage);
+  const repositoriesService = new RepositoriesService(storage, settingsService);
 
   // Initialize dumps service
   const dumpsService = new DumpsService(storage);
