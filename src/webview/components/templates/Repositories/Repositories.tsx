@@ -1,11 +1,11 @@
 import { SearchBar, Section, SectionItem } from '@components/atoms';
+import { FolderCode, GitGraph } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
 import { useRepositoriesService } from '../../../hooks/useRepositoriesService';
-import { FolderCode, Pin, PinOff } from 'lucide-react';
 
 export const Repositories: React.FC = () => {
   const [searchValue, setSearchValue] = useState('');
-  const { repositories, openRepository, togglePinRepository } =
+  const { repositories, openRepository, openGitHubRepository } =
     useRepositoriesService();
 
   const filteredRepositories = useMemo(() => {
@@ -26,26 +26,17 @@ export const Repositories: React.FC = () => {
     }
   };
 
-  // Sort repositories: pinned first, then by lastOpened (most recent first)
+  // Sort repositories by lastOpened (most recent first)
   const sortedRepositories = useMemo(() => {
     return [...filteredRepositories].sort((a, b) => {
-      // Pinned repositories come first
-      if (a.pinned && !b.pinned) return -1;
-      if (!a.pinned && b.pinned) return 1;
-
-      // If both have same pin status, sort by lastOpened
       const dateA = new Date(a.lastOpened).getTime();
       const dateB = new Date(b.lastOpened).getTime();
       return dateB - dateA;
     });
   }, [filteredRepositories]);
 
-  const handleTogglePin = async (path: string) => {
-    try {
-      await togglePinRepository(path);
-    } catch (error: any) {
-      console.error('Failed to toggle pin:', error);
-    }
+  const handleOpenGitHub = (path: string) => {
+    openGitHubRepository(path);
   };
 
   return (
@@ -67,8 +58,8 @@ export const Repositories: React.FC = () => {
           name={repository.nickname || repository.name}
           onClick={() => handleOpenRepository(repository.path)}
           icon={FolderCode}
-          action={() => handleTogglePin(repository.path)}
-          actionIcon={repository.pinned ? Pin : PinOff}
+          action={() => handleOpenGitHub(repository.path)}
+          actionIcon={GitGraph}
         />
       ))}
     </Section>

@@ -463,3 +463,45 @@ function deleteBranchInternal(
         }
     );
 }
+
+/**
+ * Get the GitHub repository URL from a git repository path
+ * Returns the HTTPS GitHub URL if the remote is GitHub, null otherwise
+ */
+export async function getGitRemoteUrl(workspacePath: string): Promise<string | null> {
+    return new Promise((resolve) => {
+        // Get the remote origin URL
+        child_process.exec(
+            'git config --get remote.origin.url',
+            { cwd: workspacePath },
+            (error, stdout, stderr) => {
+                if (error || !stdout.trim()) {
+                    // Remote doesn't exist or error getting it
+                    resolve(null);
+                    return;
+                }
+
+                const remoteUrl = stdout.trim();
+
+                // Handle HTTPS URLs: https://github.com/user/repo.git or https://github.com/user/repo
+                const httpsMatch = remoteUrl.match(/^https?:\/\/(?:www\.)?github\.com\/([^\/]+)\/([^\/\.]+)(?:\.git)?\/?$/);
+                if (httpsMatch) {
+                    const [, owner, repo] = httpsMatch;
+                    resolve(`https://github.com/${owner}/${repo}`);
+                    return;
+                }
+
+                // Handle SSH URLs: git@github.com:user/repo.git or git@github.com:user/repo
+                const sshMatch = remoteUrl.match(/^git@github\.com:([^\/]+)\/([^\/\.]+)(?:\.git)?\/?$/);
+                if (sshMatch) {
+                    const [, owner, repo] = sshMatch;
+                    resolve(`https://github.com/${owner}/${repo}`);
+                    return;
+                }
+
+                // Not a GitHub repository
+                resolve(null);
+            }
+        );
+    });
+}

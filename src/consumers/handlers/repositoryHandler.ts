@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { RepositoriesService } from '../../services/repositories';
+import { getGitRemoteUrl } from '../utils/gitUtils';
 
 export function handleOpenRepositoryMessage(
   message: Record<string, unknown>,
@@ -26,6 +27,27 @@ export function handleOpenRepositoryMessage(
             );
           }
         );
+      }
+      return;
+    case 'openGitHubRepository':
+      if (message.path) {
+        const repositoryPath = message.path as string;
+        getGitRemoteUrl(repositoryPath)
+          .then(githubUrl => {
+            if (githubUrl) {
+              vscode.env.openExternal(vscode.Uri.parse(githubUrl));
+            } else {
+              vscode.window.showInformationMessage(
+                'GitHub repository URL not available for this repository'
+              );
+            }
+          })
+          .catch(error => {
+            console.error('Failed to get GitHub URL:', error);
+            vscode.window.showErrorMessage(
+              'Failed to get GitHub repository URL'
+            );
+          });
       }
       return;
   }
