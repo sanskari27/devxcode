@@ -157,7 +157,6 @@ export const Settings: React.FC = () => {
       .addInput(
         'Regex pattern',
         'regex',
-        repositoryDenormalization.customRegex || '[-_.]'
       )
       .addButton('primary', 'Save', async values => {
         if (values.regex !== undefined) {
